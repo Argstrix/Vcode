@@ -3,36 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Java Compiler</title>
+    <title>Online Java Compiler</title>
 </head>
 <body>
-    <h1>Online Java Compiler</h1>
+    <h1>Welcome to the Java Coding Platform</h1>
 
-    <textarea id="codeArea" rows="10" cols="50">
-public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hello, world!");
-    }
-}
-    </textarea>
-    <br>
-    <button onclick="submitCode()">Run Code</button>
-
-    <h2>Output:</h2>
-    <pre id="output"></pre>
+    <button onclick="redirectToParticipant()">Participant</button>
+    <button onclick="redirectToAdmin()">Admin</button>
 
     <script>
-        function submitCode() {
-            let code = document.getElementById("codeArea").value;
+        function redirectToParticipant() {
+            console.log("Button is clicked!");
+            window.location.href = "clientt.html"; // Redirect to participant page
+        }
 
-            fetch("/compile", {
-                method: "POST",
-                headers: { "Content-Type": "text/plain" },
-                body: code
-            })
-            .then(response => response.text())
-            .then(data => document.getElementById("output").innerText = data)
-            .catch(error => console.error("Error:", error));
+        function redirectToAdmin() {
+            alert("Admin page coming soon!"); // Placeholder for now
         }
     </script>
 </body>

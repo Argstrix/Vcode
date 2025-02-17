@@ -24,26 +24,54 @@ public class MultiClientServer {
 class FileHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        File file = new File("index.html");
+        // Get the requested file path
+        String requestedFile = exchange.getRequestURI().getPath();
+        System.out.println(requestedFile);
+        // If no specific file is requested, serve index.html by default
+        if (requestedFile.equals("/") || requestedFile.equals("/index.html")) {
+            requestedFile = "/index.html";
+        }
 
-        if (!file.exists()) {
-            String errorMessage = "404 Not Found: index.html missing";
+        // Ensure security: Prevent directory traversal attacks
+        if (requestedFile.contains("..")) {
+            String errorMessage = "403 Forbidden: Access Denied";
+            exchange.sendResponseHeaders(403, errorMessage.length());
+            exchange.getResponseBody().write(errorMessage.getBytes());
+            exchange.getResponseBody().close();
+            return;
+        }
+
+        // Load the requested file (e.g., client.html, admin.html)
+        File file = new File("." + requestedFile);
+
+        // If file does not exist, return 404 Not Found
+        if (!file.exists() || file.isDirectory()) {
+            String errorMessage = "404 Not Found: " + requestedFile;
             exchange.sendResponseHeaders(404, errorMessage.length());
             exchange.getResponseBody().write(errorMessage.getBytes());
             exchange.getResponseBody().close();
             return;
         }
 
+        // Read the file contents
         byte[] fileBytes = new byte[(int) file.length()];
         FileInputStream fis = new FileInputStream(file);
         fis.read(fileBytes);
         fis.close();
 
+        // Set proper content type based on file extension
+        String contentType = "text/html";
+        if (requestedFile.endsWith(".css")) contentType = "text/css";
+        if (requestedFile.endsWith(".js")) contentType = "application/javascript";
+
+        // Send response headers and the file content
+        exchange.getResponseHeaders().set("Content-Type", contentType);
         exchange.sendResponseHeaders(200, fileBytes.length);
         exchange.getResponseBody().write(fileBytes);
         exchange.getResponseBody().close();
     }
 }
+
 
 // Handles Java code compilation using JavaFileCompiler
 class CompileHandler implements HttpHandler {
