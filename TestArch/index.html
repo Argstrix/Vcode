@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Runner</title>
+</head>
+<body>
+    <h1>Automated Test Runner</h1>
+    <input type="text" id="testId" placeholder="Enter Test ID">
+    <button onclick="runTest()">Run Test</button>
+    <p id="result"></p>
+
+    <script>
+        function runTest() {
+            const testId = document.getElementById("testId").value;
+            if (!testId) {
+                alert("Please enter a test ID");
+                return;
+            }
+
+            fetch("https://localhost:3000/runTest", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ testId: testId })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerText = "Result: " + data.result;
+            })
+            .catch(error => console.error("Error:", error));
+        }
+    </script>
+</body>
+</html>

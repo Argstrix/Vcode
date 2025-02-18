@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Terminal Login</title>
+  <link rel="stylesheet" href="styles_light.css">
+</head>
+<body>
+  <div class="terminal-container">
+    <div class="terminal-window">
+      <div class="terminal-header">
+        <div class="buttons">
+          <span class="button close"></span>
+          <span class="button minimize"></span>
+          <span class="button maximize"></span>
+        </div>
+        <div class="title">login@localhost:~</div>
+      </div>
+      <div class="terminal-body">
+        <p>Welcome to the System. Please log in to continue.</p>
+        <form id="login-form">
+          <div class="input-box">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" autocomplete="off" required>
+            <label for="password">Password:</label>
+            <input type="password" id="password" name="password" required>
+          </div>
+          
+            <button type="submit" id ="SignIn">Login</button>
+          
+        </form>
+        <p id="error-message" class="hidden">Access Denied. Invalid credentials.</p>
+      </div>
+    </div>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
