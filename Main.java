@@ -1,5 +1,1 @@
-public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hello, world!");
-    }
-}
+{"code":"import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        String input = scanner.nextLine();\n        System.out.println(\"You entered: \" + input);\n    }\n}","input":"Hello"}

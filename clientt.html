@@ -7,15 +7,19 @@
     <style>
         body { display: flex; height: 100vh; }
         #question { width: 40%; padding: 10px; border-right: 2px solid #ccc; }
-        #editor-container { width: 60%; height: 90vh; }
+        #editor-container { width: 60%; height: 80vh; }
         #output { margin-top: 10px; background: #f4f4f4; padding: 10px; white-space: pre-wrap; }
+        #input-container { margin-top: 10px; }
     </style>
-    
 </head>
 <body>
     <div id="question">
         <h1>Question:</h1>
-        <p>Write a Java program that prints "Hello, world!"</p>
+        <p>Write a Java program that reads input and prints it.</p>
+        <div id="input-container">
+            <label for="user-input">Input:</label>
+            <textarea id="user-input" rows="3" style="width: 100%;"></textarea>
+        </div>
         <button onclick="submitCode()">Run Code</button>
         <h2>Output:</h2>
         <pre id="output"></pre>
@@ -23,25 +27,25 @@
     <div id="editor-container"></div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
-
     <script>
         let editor;
         require.config({ paths: { vs: "https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs" } });
         require(["vs/editor/editor.main"], function () {
             editor = monaco.editor.create(document.getElementById("editor-container"), {
-                value: `public class Main {\n    public static void main(String[] args) {\n        System.out.println("Hello, world!");\n    }\n}`,
+                value: `import java.util.Scanner;\n\npublic class Main {\n    public static void main(String[] args) {\n        Scanner scanner = new Scanner(System.in);\n        String input = scanner.nextLine();\n        System.out.println("You entered: " + input);\n    }\n}`,
                 language: "java",
                 theme: "vs-dark"
             });
         });
 
         function submitCode() {
-            let code = editor.getValue();  // Get text from Monaco Editor
+            let code = editor.getValue();
+            let input = document.getElementById("user-input").value;
 
             fetch("/compile", {
                 method: "POST",
-                headers: { "Content-Type": "text/plain" },
-                body: code
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ code: code, input: input })
             })
             .then(response => response.text())
             .then(data => document.getElementById("output").innerText = data)

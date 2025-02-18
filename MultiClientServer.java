@@ -1,7 +1,10 @@
 import com.sun.net.httpserver.*;
+import com.google.gson.*;
+
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -20,91 +23,106 @@ public class MultiClientServer {
     }
 }
 
-// Serves index.html
+// Serves index.html and other static files
 class FileHandler implements HttpHandler {
     @Override
     public void handle(HttpExchange exchange) throws IOException {
-        // Get the requested file path
         String requestedFile = exchange.getRequestURI().getPath();
         System.out.println(requestedFile);
-        // If no specific file is requested, serve index.html by default
+
         if (requestedFile.equals("/") || requestedFile.equals("/index.html")) {
             requestedFile = "/index.html";
         }
 
-        // Ensure security: Prevent directory traversal attacks
         if (requestedFile.contains("..")) {
-            String errorMessage = "403 Forbidden: Access Denied";
-            exchange.sendResponseHeaders(403, errorMessage.length());
-            exchange.getResponseBody().write(errorMessage.getBytes());
-            exchange.getResponseBody().close();
+            sendErrorResponse(exchange, 403, "403 Forbidden: Access Denied");
             return;
         }
 
-        // Load the requested file (e.g., client.html, admin.html)
         File file = new File("." + requestedFile);
 
-        // If file does not exist, return 404 Not Found
         if (!file.exists() || file.isDirectory()) {
-            String errorMessage = "404 Not Found: " + requestedFile;
-            exchange.sendResponseHeaders(404, errorMessage.length());
-            exchange.getResponseBody().write(errorMessage.getBytes());
-            exchange.getResponseBody().close();
+            sendErrorResponse(exchange, 404, "404 Not Found: " + requestedFile);
             return;
         }
 
-        // Read the file contents
         byte[] fileBytes = new byte[(int) file.length()];
-        FileInputStream fis = new FileInputStream(file);
-        fis.read(fileBytes);
-        fis.close();
+        try (FileInputStream fis = new FileInputStream(file)) {
+            fis.read(fileBytes);
+        }
 
-        // Set proper content type based on file extension
         String contentType = "text/html";
         if (requestedFile.endsWith(".css")) contentType = "text/css";
         if (requestedFile.endsWith(".js")) contentType = "application/javascript";
 
-        // Send response headers and the file content
         exchange.getResponseHeaders().set("Content-Type", contentType);
         exchange.sendResponseHeaders(200, fileBytes.length);
         exchange.getResponseBody().write(fileBytes);
         exchange.getResponseBody().close();
     }
-}
 
+    private void sendErrorResponse(HttpExchange exchange, int statusCode, String message) throws IOException {
+        exchange.sendResponseHeaders(statusCode, message.length());
+        exchange.getResponseBody().write(message.getBytes());
+        exchange.getResponseBody().close();
+    }
+}
 
 // Handles Java code compilation using JavaFileCompiler
 class CompileHandler implements HttpHandler {
+    private static final Gson gson = new Gson();
+
     @Override
     public void handle(HttpExchange exchange) throws IOException {
         if (!"POST".equals(exchange.getRequestMethod())) {
-            exchange.sendResponseHeaders(405, -1);
+            sendJsonResponse(exchange, 405, "Method Not Allowed");
             return;
         }
 
-        // Read Java code from client
+        // Read and parse JSON request body
         InputStreamReader isr = new InputStreamReader(exchange.getRequestBody(), StandardCharsets.UTF_8);
         BufferedReader br = new BufferedReader(isr);
-        StringBuilder code = new StringBuilder();
+        StringBuilder requestBody = new StringBuilder();
         String line;
         while ((line = br.readLine()) != null) {
-            code.append(line).append("\n");
+            requestBody.append(line);
         }
         br.close();
 
+        Map<String, String> requestData;
+        try {
+            requestData = gson.fromJson(requestBody.toString(), Map.class);
+        } catch (JsonSyntaxException e) {
+            sendJsonResponse(exchange, 400, "Invalid JSON format");
+            return;
+        }
+
+        String code = requestData.getOrDefault("code", "");
+        String input = requestData.getOrDefault("input", "");
+
+        if (code.isEmpty()) {
+            sendJsonResponse(exchange, 400, "Missing 'code' field");
+            return;
+        }
+
         // Save Java code to a file
-        String fileName = "Main.java"; //Needs to be different for each client
+        String fileName = "Main.java"; // Needs to be unique for each client
         File javaFile = new File(fileName);
         try (FileWriter writer = new FileWriter(javaFile)) {
-            writer.write(code.toString());
+            writer.write(code);
         }
 
         // Use JavaFileCompiler to compile and execute Java code
-        String output = JavaFileCompiler.compileAndRun(fileName);
+        String output = JavaFileCompiler.compileAndRun(fileName, input.toString());
 
-        // Send output back to the client
-        exchange.sendResponseHeaders(200, output.length());
-        exchange.getResponseBody().write(output.getBytes());
+        sendJsonResponse(exchange, 200, output);
+    }
+
+    private void sendJsonResponse(HttpExchange exchange, int statusCode, String message) throws IOException {
+        String jsonResponse = gson.toJson(Map.of("message", message));
+        exchange.getResponseHeaders().set("Content-Type", "application/json");
+        exchange.sendResponseHeaders(statusCode, jsonResponse.length());
+        exchange.getResponseBody().write(jsonResponse.getBytes(StandardCharsets.UTF_8));
         exchange.getResponseBody().close();
     }
 }

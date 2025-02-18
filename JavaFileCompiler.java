@@ -3,7 +3,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
 public class JavaFileCompiler {
-    public static String compileAndRun(String filePath) {
+    public static String compileAndRun(String filePath, String input) { // Accept input
         File javaFile = new File(filePath);
         if (!javaFile.exists() || !filePath.endsWith(".java")) {
             return "Error: Invalid Java file path.";
@@ -17,8 +17,8 @@ public class JavaFileCompiler {
             return "Compilation failed:\n" + compileOutput; // Send error message
         }
 
-        // Step 2: Run the compiled Java class
-        return runJavaClass(className);
+        // Step 2: Run the compiled Java class with input
+        return runJavaClass(className, input); 
     }
 
     // Method to compile Java file
@@ -34,15 +34,24 @@ public class JavaFileCompiler {
         return result == 0 ? "" : errorStream.toString(); // Return compilation errors if any
     }
 
-    // Method to run the compiled Java class
-    private static String runJavaClass(String className) {
+    // Method to run the compiled Java class with input
+    private static String runJavaClass(String className, String input) {
         try {
             ProcessBuilder processBuilder = new ProcessBuilder("java", className);
-            processBuilder.redirectErrorStream(true); // Merge stdout and stderr
-
+            processBuilder.redirectErrorStream(true);
             Process process = processBuilder.start();
-            StringBuilder output = new StringBuilder();
 
+            // Send input to the process
+            if (!input.isEmpty()) {
+                try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(process.getOutputStream()))) {
+                    writer.write(input);
+                    writer.newLine();
+                    writer.flush();
+                }
+            }
+
+            // Read process output
+            StringBuilder output = new StringBuilder();
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -51,7 +60,7 @@ public class JavaFileCompiler {
             }
 
             process.waitFor();
-            return output.toString().isEmpty() ? "No output or runtime error occurred." : output.toString();
+            return output.toString().isEmpty() ? "No output or runtime error." : output.toString();
         } catch (Exception e) {
             return "Runtime error: " + e.getMessage();
         }
