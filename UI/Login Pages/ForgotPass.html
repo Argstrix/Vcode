@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forgot Password</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <link rel="stylesheet" href="ForgotPassStyle.css">
+</head>
+<body>
+    <div class="container">
+        <div class="terminal">
+            <div class="terminal-header">
+                <div class="buttons">
+                    <span class="button close"></span>
+                    <span class="button minimize"></span>
+                    <span class="button maximize"></span>
+                </div>
+                <div><span class="title">root@vcode:~$</span></div>
+            </div>
+
+            <!-- Step 1: Enter Email -->
+            <div class="terminal-body" id="step1">
+                <pre id="output"></pre>
+                <div class="prompt">> Enter your email to reset password:</div>
+                <input type="email" id="email-input" class="input-field" placeholder="your-email@example.com">
+                <button class="btn reset-btn">Send Code</button>
+                <a href="index.html" class="back-link"><< Back to Login</a>
+            </div>
+
+            <!-- Step 2: Enter Verification Code -->
+            <div class="terminal-body hidden" id="step2">
+                <pre id="output"></pre>
+                <div class="prompt">> Enter the code sent to your email:</div>
+                <input type="text" id="code-input" class="input-field" placeholder="Enter code">
+                <button class="btn verify-btn">Verify Code</button>
+            </div>
+
+            <!-- Step 3: Enter New Password -->
+            <div class="terminal-body hidden" id="step3">
+                <pre id="output"></pre>
+                <div class="prompt">> Enter new password:</div>
+                <input type="password" id="new-password" class="input-field" placeholder="New password">
+                <div class="prompt">> Confirm password:</div>
+                <input type="password" id="confirm-password" class="input-field" placeholder="Confirm password">
+                <button class="btn save-password-btn">Save Password</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="ForgotPassScript.js"></script>
+</body>
+</html>
