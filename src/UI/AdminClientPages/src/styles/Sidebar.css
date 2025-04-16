@@ -1,0 +1,58 @@
+.sidebar {
+    min-width: 250px;
+    
+    background-color: var(--sidebar-bg); /* Uses theme variable */
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    transition: 0.25s ease-in;
+    
+  }
+ 
+  .sidebar li
+  {
+    list-style: none;
+    padding-bottom: 1.25em;
+  }
+  .sidebar a {
+    color: var(--text-color);
+    text-decoration: none;
+    padding: 10px;
+    display: block;
+    border-radius: 5px;
+  }
+  
+  
+ .listgroup
+ {
+    padding: auto;
+ }
+  .listgroupitem {
+    background-color: var(--sidebar-bg); 
+    color: var(--text-color);
+    border: none;               
+    font-size: 16px;            
+
+    transition: 0.25s ease-in;
+    margin-bottom: 10px;        
+    border-radius: 8px;         
+  }
+  
+  .listgroupitem:last-child {
+    margin-bottom: 0; /* Prevents extra margin at the last item */
+  }
+  
+  .listgroupitem a {
+    text-decoration: none;       /* Remove underline from links */
+    color: inherit;              /* Inherit text color */
+    display: block;
+    
+  }
+  
+  .listgroupitem:hover {
+    background-color: var(--card-bg);  
+    color: #ff3c00;             
+    transform: scale(1.05);     
+  }
+  

@@ -1,0 +1,58 @@
+*
+{
+  
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap'); 
+  font-size: 14px;
+  letter-spacing: 0.05em;
+    
+}
+::-webkit-scrollbar {
+  display: none;
+}
+* {
+  scrollbar-width: none;
+}
+html {
+  -ms-overflow-style: none;
+}
+
+.admin-layout {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    min-width: 100vw; /* Ensure full width */
+  }
+  
+  .main-content {
+    display: flex;
+    flex: 1;
+    
+  }
+  
+  .sidebar {
+    max-width: 25%;
+    flex-shrink: 0; /* Prevent sidebar from shrinking */
+  }
+  
+  .content {
+    flex-grow: 0; /* Ensures it expands fully */
+    padding: 2px;
+    background-color: var(--content);
+    color: white;
+    max-height: 100vh;
+    min-width: 0; /* Prevents overflow issues */
+  }
+  .theme-toggle
+  {
+    border-radius: 8px;
+    padding: 1em;
+    background-color: var(--bgcolor);
+    color:var(--textcolor);
+    transition: 0.25s ease-in;
+  }
+  .theme-toggle:hover
+  {
+    background-color: var(--hoverbgcolor);
+    border:1px solid var(--togglehovercolor);
+    
+  }

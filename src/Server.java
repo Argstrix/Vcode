@@ -1,0 +1,438 @@
+import java.io.*;
+import java.net.*;
+import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+import com.google.gson.*;
+import com.google.gson.reflect.TypeToken;
+import javax.lang.model.util.Elements;
+
+public class Server {
+    protected static final ConcurrentHashMap<String, String> userRoles = new ConcurrentHashMap<>();
+    protected static final Set<String> allowedOrigins = Set.of(
+    "https://your-frontend.com",  // Production frontend
+    "https://admin-panel.yourdomain.com",  // Admin panel
+    "http://localhost:9000",  // Local development frontend
+    "http://127.0.0.1:9000",
+    "http://localhost:5173", // Alternative local address
+    "http://localhost:9001"
+);
+
+    public static void main(String[] args) throws IOException {
+        int port = args.length > 0 ? Integer.parseInt(args[0]) : 8080;
+        ServerSocket serverSocket = new ServerSocket(port);
+        System.out.println("Server running on port " + port);
+
+        while (true) {
+            Socket clientSocket = serverSocket.accept();
+            new Thread(new ClientHandler(clientSocket)).start();
+        }   
+    }
+}
+
+class ClientHandler implements Runnable {
+    private final Socket clientSocket;
+    private static final String SOURCE_FILE = "Main.java";
+
+    public ClientHandler(Socket socket) {
+        this.clientSocket = socket;
+    }
+
+    @Override
+    public void run() {
+        try (
+                BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+                BufferedWriter out = new BufferedWriter(new OutputStreamWriter(clientSocket.getOutputStream()))) {
+
+            String requestLine = in.readLine();
+            if (requestLine == null || requestLine.isEmpty())
+                return;
+
+            String[] requestParts = requestLine.split(" ");
+            String method = requestParts[0];
+            String path = requestParts[1];
+
+            Map<String, String> headers = new HashMap<>();
+            String line;
+            int contentLength = 0;
+
+            while (!(line = in.readLine()).isEmpty()) {
+                int separatorIndex = line.indexOf(":");
+                if (separatorIndex != -1) {
+                    String headerName = line.substring(0, separatorIndex).trim();
+                    String headerValue = line.substring(separatorIndex + 1).trim();
+                    headers.put(headerName, headerValue);
+                    if (headerName.equalsIgnoreCase("Content-Length")) {
+                        contentLength = Integer.parseInt(headerValue);
+                    }
+                }
+            }
+
+            StringBuilder requestBodyBuilder = new StringBuilder();
+            if (contentLength > 0) {
+                char[] bodyChars = new char[contentLength];
+                in.read(bodyChars);
+                requestBodyBuilder.append(bodyChars);
+            }
+            String requestBody = requestBodyBuilder.toString();
+
+            System.out.println("Received: " + method + " " + path);
+            String origin = headers.get("Origin");
+            System.out.println(origin);
+            
+            // Handle CORS preflight
+            if (method.equals("OPTIONS")) {
+                
+                sendCorsPreflightResponse(out,origin);
+                return;
+            }
+
+          
+            try {
+                if (method.equals("POST") && path.equals("/store-role")) {
+                    JsonObject jsonObject = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
+                    String email = jsonObject.get("email").getAsString();
+                    String role = jsonObject.get("role").getAsString();
+                    int backendPort = jsonObject.get("port").getAsInt();
+
+                    Server.userRoles.put(email, role);
+                    System.out.println("Stored Role: " + email + " -> " + role);
+
+                    // Build JSON response payload
+                    Map<String, Object> responseBody = new HashMap<>();
+                    String serverIp = clientSocket.getLocalAddress().getHostAddress();
+                    responseBody.put("redirect", "http://" + "localhost" + ":9001/");
+                    responseBody.put("setCookies", new String[] {
+                        "userEmail=" + URLEncoder.encode(email, "UTF-8") + "; Path=/; HttpOnly",
+                        "userRole=" + URLEncoder.encode(role, "UTF-8") + "; Path=/; HttpOnly",
+                        "backendPort=" + backendPort + "; Path=/; HttpOnly"
+                    });
+                    // Use your existing helper
+                    System.out.println(responseBody);
+                    sendJsonResponse(out, 200, responseBody,origin);
+
+
+                }
+                else if (method.equals("GET") && path.equals("/submissions")) {
+                    List<Map<String, String>> submissions = readSubmissionsFromFirebase();
+                    sendJsonResponse(out, 200, submissions);
+
+                } else if (method.equals("POST") && path.equals("/submitCode")) {
+                    JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
+                    String code = jsonObject.get("code").getAsString();
+
+                    String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
+                    String clientIP = clientSocket.getInetAddress().getHostAddress();
+                    Map<String, String> submission = new HashMap<>();
+                    submission.put("code", code);
+                    submission.put("timestamp", timestamp);
+                    submission.put("ip", clientIP);
+
+                    pushSubmissionToFirebase(submission);
+                    sendJsonResponse(out, 200, Map.of("message", "Code submitted successfully"));
+
+                } else if (method.equals("DELETE") && path.equals("/clearSingleSubmissions")) {
+                    JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
+                    String timestamp = jsonObject.get("timestamp").getAsString();
+                    deleteSingleSubmissionFromFirebase(timestamp);
+                    sendJsonResponse(out, 200, Map.of("message", "Submission deleted successfully"));
+
+                } else if (method.equals("DELETE") && path.equals("/clearSubmissions")) {
+                    clearSubmissionsOnFirebase();
+                    sendJsonResponse(out, 200, Map.of("message", "All submissions cleared"));
+
+                } else if (method.equals("GET") && path.startsWith("/question")) {
+                    String[] pathParts = path.split("/");
+
+                    if (pathParts.length == 2) {
+                        // No ID provided, fetch all questions
+                        List<Map<String, Object>> questions = readQuestionsFromFirebase();
+                        sendJsonResponse(out, 200, questions);
+                    } else if (pathParts.length == 3) {
+                        // Fetch a specific question by ID
+                        String questionId = pathParts[2];
+                        Map<String, Object> question = getQuestionByIdFromFirebase(questionId);
+                        if (question != null) {
+                            sendJsonResponse(out, 200, question);
+                        } else {
+                            sendJsonResponse(out, 404, Map.of("error", "Question not found"));
+                        }
+                    } else {
+                        sendJsonResponsew(clientSocket, 400, Map.of("error", "Invalid request format"));
+                    }
+                }else if (method.equals("POST") && path.equals("/compile")) {
+                    JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
+                    String code = jsonObject.get("code").getAsString();
+                    JsonElement testInputElement = jsonObject.get("testInput");
+                    String testInput = (testInputElement != null && !testInputElement.isJsonNull())
+                            ? testInputElement.getAsString()
+                            : "";
+
+                    try (FileWriter writer = new FileWriter(SOURCE_FILE)) {
+                        writer.write(code);
+                    }
+
+                    String output = JavaFileCompiler.compileAndRun(SOURCE_FILE, testInput);
+                    System.out.println(output);
+                    sendJsonResponse(out, 200, Map.of("output", output));
+                } else {
+                    sendJsonResponse(out, 404, Map.of("error", "Not Found"));
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                sendJsonResponse(out, 500, Map.of("error", "Internal Server Error"));
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // =================== Firebase Interactions ===================
+
+    private List<Map<String, String>> readSubmissionsFromFirebase() {
+        List<Map<String, String>> submissions = new ArrayList<>();
+        try {
+            URL url = new URL("https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/submissions.json");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            if (conn.getResponseCode() == 200) {
+                try (InputStreamReader reader = new InputStreamReader(conn.getInputStream())) {
+                    JsonObject jsonObject = JsonParser.parseReader(reader).getAsJsonObject();
+                    System.out.println("Firebase JSON Response: " + jsonObject);
+                    for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+                        Map<String, String> submission = new Gson().fromJson(entry.getValue(),
+                                new TypeToken<Map<String, String>>() {
+                                }.getType());
+                                submissions.add(submission);
+
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return submissions;
+    }
+
+    private List<Map<String, Object>> readQuestionsFromFirebase() {
+        List<Map<String, Object>> questions = new ArrayList<>();
+        try {
+            URL url = new URL("https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions.json");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+    
+            if (conn.getResponseCode() == 200) {
+                try (InputStreamReader reader = new InputStreamReader(conn.getInputStream())) {
+                    JsonElement jsonElement = JsonParser.parseReader(reader);
+    
+                    if (jsonElement.isJsonArray()) {
+                        // Handle JSON array response
+                        JsonArray jsonArray = jsonElement.getAsJsonArray();
+                        for (JsonElement element : jsonArray) {
+                            if (element != null && !element.isJsonNull()) { // Ignore null values
+                                Map<String, Object> question = new Gson().fromJson(element,
+                                        new TypeToken<Map<String, Object>>() {}.getType());
+                                questions.add(question);
+                            }
+                        }
+                    } else if (jsonElement.isJsonObject()) {
+                        // Handle JSON object response (default Firebase structure)
+                        JsonObject jsonObject = jsonElement.getAsJsonObject();
+                        for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+                            Map<String, Object> question = new Gson().fromJson(entry.getValue(),
+                                    new TypeToken<Map<String, Object>>() {}.getType());
+                            questions.add(question);
+                        }
+                    } else {
+                        System.err.println("Unexpected JSON format received.");
+                    }
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return questions;
+    }
+    
+
+    private void pushSubmissionToFirebase(Map<String, String> submission) {
+        try {
+            URL url = new URL("https://vcode-99b20-default-rtdb.asia-southeast1.firebasedatabase.app/submissions.json");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+
+            String json = new Gson().toJson(submission);
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write(json.getBytes(StandardCharsets.UTF_8));
+            }
+
+            conn.getResponseCode();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void deleteSingleSubmissionFromFirebase(String timestampToDelete) {
+        List<Map<String, String>> submissions = readSubmissionsFromFirebase();
+        for (Map<String, String> submission : submissions) {
+            if (timestampToDelete.equals(submission.get("timestamp"))) {
+                String firebaseKey = submission.get("firebaseKey");
+                try {
+                    URL url = new URL(
+                            "https://vcode-99b20-default-rtdb.asia-southeast1.firebasedatabase.app/submissions/"
+                                    + firebaseKey + ".json");
+                    HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+                    conn.setRequestMethod("DELETE");
+                    conn.getResponseCode();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                break;
+            }
+        }
+    }
+
+    private void clearSubmissionsOnFirebase() {
+        try {
+            URL url = new URL("https://vcode-99b20-default-rtdb.asia-southeast1.firebasedatabase.app/submissions.json");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("PUT");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Content-Type", "application/json");
+
+            try (OutputStream os = conn.getOutputStream()) {
+                os.write("{}".getBytes(StandardCharsets.UTF_8)); // Empty object to delete all submissions
+            }
+
+            conn.getResponseCode();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private JsonObject fetchQuestionFromFirebase() {
+        try {
+            URL url = new URL("https://vcode-99b20-default-rtdb.asia-southeast1.firebasedatabase.app/question.json");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            if (conn.getResponseCode() == 200) {
+                try (InputStreamReader reader = new InputStreamReader(conn.getInputStream())) {
+                    return JsonParser.parseReader(reader).getAsJsonObject();
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return new JsonObject();
+    }
+
+    private Map<String, Object> getQuestionByIdFromFirebase(String questionId) {
+        try {
+            String urlString = "https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions/"
+                    + questionId + ".json";
+            System.out.println("Fetching question from: " + urlString);
+
+            URL url = new URL(urlString);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+
+            int responseCode = conn.getResponseCode();
+            System.out.println("Response Code: " + responseCode);
+
+            if (responseCode == 200) {
+                try (InputStreamReader reader = new InputStreamReader(conn.getInputStream())) {
+                    JsonElement jsonElement = JsonParser.parseReader(reader);
+
+                    if (jsonElement != null && !jsonElement.isJsonNull()) {
+                        Map<String, Object> question = new Gson().fromJson(jsonElement,
+                                new TypeToken<Map<String, Object>>() {
+                                }.getType());
+
+                        //System.out.println("Fetched Question: " + question); // Debug Print
+                        return question;
+                    } else {
+                        System.out.println("Received null or empty response from Firebase.");
+                    }
+                }
+            } else {
+                System.out.println("Failed to fetch question. HTTP Response Code: " + responseCode);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        System.out.println("Returning null: Question not found or an error occurred.");
+        return null; // Return null if the question is not found
+    }
+
+    // =================== Response Utilities ===================
+
+    private void sendJsonResponse(BufferedWriter out, int statusCode, Object body) throws IOException {
+        Gson gson = new Gson();
+        String json = gson.toJson(body);
+
+        out.write("HTTP/1.1 " + statusCode + " OK\r\n");
+        out.write("Content-Type: application/json\r\n");
+        out.write("Access-Control-Allow-Origin: *\r\n");
+        out.write("Access-Control-Allow-Credentials: true\r\n");
+        out.write("Content-Length: " + json.getBytes(StandardCharsets.UTF_8).length + "\r\n");
+        out.write("\r\n");
+        out.write(json);
+        out.flush();
+    }
+    private void sendJsonResponse(BufferedWriter out, int statusCode, Object body,String origin) throws IOException {
+        Gson gson = new Gson();
+        String json = gson.toJson(body);
+        out.write("HTTP/1.1 " + statusCode + " OK\r\n");
+        if (Server.allowedOrigins.contains(origin)) {
+            out.write("Access-Control-Allow-Origin: " + origin + "\r\n");
+        } else {
+            out.write("Access-Control-Allow-Origin: null\r\n"); // Or send an error if invalid
+        }
+        out.write("Access-Control-Allow-Credentials: true\r\n");
+        out.write("Content-Type: application/json\r\n");
+        out.write("Content-Length: " + json.getBytes(StandardCharsets.UTF_8).length + "\r\n");
+        out.write("\r\n");
+        out.write(json);
+        out.flush();
+    }
+
+    private void sendJsonResponsew(Socket clientSocket, int statusCode, Object body) throws IOException {
+        Gson gson = new Gson();
+        String json = gson.toJson(body);
+        byte[] responseBody = json.getBytes(StandardCharsets.UTF_8);
+
+        OutputStream out = clientSocket.getOutputStream();
+        String headers = "HTTP/1.1 " + statusCode + " OK\r\n"
+                + "Content-Type: application/json\r\n"
+                + "Access-Control-Allow-Origin: *\r\n"
+                + "Content-Length: " + responseBody.length + "\r\n"
+                + "\r\n";
+
+        out.write(headers.getBytes(StandardCharsets.UTF_8)); // Write headers
+        out.write(responseBody); // Write JSON response
+        out.flush();
+        clientSocket.close(); // Ensure connection is properly closed
+    }
+
+    private static void sendCorsPreflightResponse(BufferedWriter out,String origin) throws IOException {
+        out.write("HTTP/1.1 204 No Content\r\n");
+        if (Server.allowedOrigins.contains(origin)) {
+            out.write("Access-Control-Allow-Origin: " + origin + "\r\n");
+            out.write("Access-Control-Allow-Credentials: true\r\n");
+        } else {
+            out.write("Access-Control-Allow-Origin: null\r\n"); // Or send an error if invalid
+        }
+        out.write("Access-Control-Allow-Methods: POST, GET, OPTIONS\r\n");
+        out.write("Access-Control-Allow-Headers: Content-Type\r\n");
+        out.write("Access-Control-Max-Age: 86400\r\n");
+        out.write("\r\n");
+        out.flush();
+    }
+}

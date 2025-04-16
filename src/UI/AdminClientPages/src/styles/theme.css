@@ -1,0 +1,26 @@
+/* Default (Dark Mode) */
+:root {
+    --bg-color: #1a1a1a;
+    --text-color: #b3d9b3;
+    --sidebar-bg: #0a0a0a;
+    --content-bg: #121212;
+    --card-bg: #1b1b1b; /* No change here */
+    --content: #181616;
+    --togglebutton:#0a0a0a;
+    --togglehovercolor:green;
+    --hoverbgcolor: #f9f9f9;
+  }
+  
+  /* Light Mode */
+  .light-theme {
+    --bg-color: #f9f9f9;
+    --text-color: #b3d9b3;
+    --sidebar-bg: #ffffff;
+    --content-bg: #f0f0f0;
+    --card-bg: #d4d4d4; /* Darker grey */
+    --content: #d8d2d2;
+    --togglebutton:rgb(192, 192, 192);
+    --togglehovercolor:green;
+    --hoverbgcolor: #0a0a0a;
+  }
+  
