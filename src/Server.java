@@ -12,13 +12,12 @@ import javax.lang.model.util.Elements;
 public class Server {
     protected static final ConcurrentHashMap<String, String> userRoles = new ConcurrentHashMap<>();
     protected static final Set<String> allowedOrigins = Set.of(
-    "https://your-frontend.com",  // Production frontend
-    "https://admin-panel.yourdomain.com",  // Admin panel
-    "http://localhost:9000",  // Local development frontend
-    "http://127.0.0.1:9000",
-    "http://localhost:5173", // Alternative local address
-    "http://localhost:9001"
-);
+            "https://your-frontend.com", // Production frontend
+            "https://admin-panel.yourdomain.com", // Admin panel
+            "http://localhost:9000", // Local development frontend
+            "http://127.0.0.1:9000",
+            "http://localhost:5173", // Alternative local address
+            "http://localhost:9001");
 
     public static void main(String[] args) throws IOException {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : 8080;
@@ -28,7 +27,7 @@ public class Server {
         while (true) {
             Socket clientSocket = serverSocket.accept();
             new Thread(new ClientHandler(clientSocket)).start();
-        }   
+        }
     }
 }
 
@@ -81,15 +80,14 @@ class ClientHandler implements Runnable {
             System.out.println("Received: " + method + " " + path);
             String origin = headers.get("Origin");
             System.out.println(origin);
-            
+
             // Handle CORS preflight
             if (method.equals("OPTIONS")) {
-                
-                sendCorsPreflightResponse(out,origin);
+
+                sendCorsPreflightResponse(out, origin);
                 return;
             }
 
-          
             try {
                 if (method.equals("POST") && path.equals("/store-role")) {
                     JsonObject jsonObject = JsonParser.parseString(requestBody.toString()).getAsJsonObject();
@@ -105,33 +103,36 @@ class ClientHandler implements Runnable {
                     String serverIp = clientSocket.getLocalAddress().getHostAddress();
                     responseBody.put("redirect", "http://" + "localhost" + ":9001/");
                     responseBody.put("setCookies", new String[] {
-                        "userEmail=" + URLEncoder.encode(email, "UTF-8") + "; Path=/; HttpOnly",
-                        "userRole=" + URLEncoder.encode(role, "UTF-8") + "; Path=/; HttpOnly",
-                        "backendPort=" + backendPort + "; Path=/; HttpOnly"
+                            "userEmail=" + URLEncoder.encode(email, "UTF-8") + "; Path=/; HttpOnly",
+                            "userRole=" + URLEncoder.encode(role, "UTF-8") + "; Path=/; HttpOnly",
+                            "backendPort=" + backendPort + "; Path=/; HttpOnly"
                     });
                     // Use your existing helper
                     System.out.println(responseBody);
-                    sendJsonResponse(out, 200, responseBody,origin);
+                    sendJsonResponse(out, 200, responseBody, origin);
 
-
-                }
-                else if (method.equals("GET") && path.equals("/submissions")) {
+                } else if (method.equals("GET") && path.equals("/submissions")) {
                     List<Map<String, String>> submissions = readSubmissionsFromFirebase();
                     sendJsonResponse(out, 200, submissions);
 
                 } else if (method.equals("POST") && path.equals("/submitCode")) {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
                     String code = jsonObject.get("code").getAsString();
+                    String problemId = jsonObject.get("problemId").getAsString();
 
                     String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
                     String clientIP = clientSocket.getInetAddress().getHostAddress();
+
+                    // Save the submission
                     Map<String, String> submission = new HashMap<>();
                     submission.put("code", code);
                     submission.put("timestamp", timestamp);
                     submission.put("ip", clientIP);
-
                     pushSubmissionToFirebase(submission);
-                    sendJsonResponse(out, 200, Map.of("message", "Code submitted successfully"));
+
+                    handleCodeSubmissionAndCheck(code, problemId, out);
+
+                    // Return results to frontend
 
                 } else if (method.equals("DELETE") && path.equals("/clearSingleSubmissions")) {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
@@ -162,7 +163,7 @@ class ClientHandler implements Runnable {
                     } else {
                         sendJsonResponsew(clientSocket, 400, Map.of("error", "Invalid request format"));
                     }
-                }else if (method.equals("POST") && path.equals("/compile")) {
+                } else if (method.equals("POST") && path.equals("/compile")) {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
                     String code = jsonObject.get("code").getAsString();
                     JsonElement testInputElement = jsonObject.get("testInput");
@@ -206,7 +207,7 @@ class ClientHandler implements Runnable {
                         Map<String, String> submission = new Gson().fromJson(entry.getValue(),
                                 new TypeToken<Map<String, String>>() {
                                 }.getType());
-                                submissions.add(submission);
+                        submissions.add(submission);
 
                     }
                 }
@@ -223,18 +224,19 @@ class ClientHandler implements Runnable {
             URL url = new URL("https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions.json");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("GET");
-    
+
             if (conn.getResponseCode() == 200) {
                 try (InputStreamReader reader = new InputStreamReader(conn.getInputStream())) {
                     JsonElement jsonElement = JsonParser.parseReader(reader);
-    
+
                     if (jsonElement.isJsonArray()) {
                         // Handle JSON array response
                         JsonArray jsonArray = jsonElement.getAsJsonArray();
                         for (JsonElement element : jsonArray) {
                             if (element != null && !element.isJsonNull()) { // Ignore null values
                                 Map<String, Object> question = new Gson().fromJson(element,
-                                        new TypeToken<Map<String, Object>>() {}.getType());
+                                        new TypeToken<Map<String, Object>>() {
+                                        }.getType());
                                 questions.add(question);
                             }
                         }
@@ -243,7 +245,8 @@ class ClientHandler implements Runnable {
                         JsonObject jsonObject = jsonElement.getAsJsonObject();
                         for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
                             Map<String, Object> question = new Gson().fromJson(entry.getValue(),
-                                    new TypeToken<Map<String, Object>>() {}.getType());
+                                    new TypeToken<Map<String, Object>>() {
+                                    }.getType());
                             questions.add(question);
                         }
                     } else {
@@ -256,11 +259,10 @@ class ClientHandler implements Runnable {
         }
         return questions;
     }
-    
 
     private void pushSubmissionToFirebase(Map<String, String> submission) {
         try {
-            URL url = new URL("https://vcode-99b20-default-rtdb.asia-southeast1.firebasedatabase.app/submissions.json");
+            URL url = new URL("https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/submissions.json");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
@@ -354,7 +356,7 @@ class ClientHandler implements Runnable {
                                 new TypeToken<Map<String, Object>>() {
                                 }.getType());
 
-                        //System.out.println("Fetched Question: " + question); // Debug Print
+                        // System.out.println("Fetched Question: " + question); // Debug Print
                         return question;
                     } else {
                         System.out.println("Received null or empty response from Firebase.");
@@ -369,6 +371,21 @@ class ClientHandler implements Runnable {
 
         System.out.println("Returning null: Question not found or an error occurred.");
         return null; // Return null if the question is not found
+    }
+
+    public List<String> getTestCasesFromQuestion(Map<String, Object> question) {
+        Object casesObj = question.get("cases");
+
+        List<String> testCases = new ArrayList<>();
+        if (casesObj instanceof List<?>) {
+            for (Object o : (List<?>) casesObj) {
+                if (o instanceof String) {
+                    testCases.add((String) o);
+                }
+            }
+        }
+
+        return testCases;
     }
 
     // =================== Response Utilities ===================
@@ -386,7 +403,8 @@ class ClientHandler implements Runnable {
         out.write(json);
         out.flush();
     }
-    private void sendJsonResponse(BufferedWriter out, int statusCode, Object body,String origin) throws IOException {
+
+    private void sendJsonResponse(BufferedWriter out, int statusCode, Object body, String origin) throws IOException {
         Gson gson = new Gson();
         String json = gson.toJson(body);
         out.write("HTTP/1.1 " + statusCode + " OK\r\n");
@@ -421,7 +439,7 @@ class ClientHandler implements Runnable {
         clientSocket.close(); // Ensure connection is properly closed
     }
 
-    private static void sendCorsPreflightResponse(BufferedWriter out,String origin) throws IOException {
+    private static void sendCorsPreflightResponse(BufferedWriter out, String origin) throws IOException {
         out.write("HTTP/1.1 204 No Content\r\n");
         if (Server.allowedOrigins.contains(origin)) {
             out.write("Access-Control-Allow-Origin: " + origin + "\r\n");
@@ -435,4 +453,72 @@ class ClientHandler implements Runnable {
         out.write("\r\n");
         out.flush();
     }
+
+    private void handleCodeSubmissionAndCheck(String code, String problemId, BufferedWriter out) {
+        final String SOURCE_FILE = "Main.java";
+    
+        Map<String, Object> question = getQuestionByIdFromFirebase(problemId);
+        if (question == null || !question.containsKey("cases") || !question.containsKey("code")) {
+            try {
+                sendJsonResponse(out, 404, Map.of("message", "Problem not found or incomplete."));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+    
+        List<String> testCases = (List<String>) question.get("cases");
+        System.out.println(testCases);
+        String expectedCode = question.get("code").toString();
+        
+        int passed = 0;
+        StringBuilder resultBuilder = new StringBuilder();
+    
+        for (int i = 0; i < testCases.size(); i++) {
+            String input = testCases.get(i);
+            String testCaseNumber = String.valueOf(i + 1);  // for display
+    
+            try {
+                // Step 1: Run expected code
+                writeToFile(SOURCE_FILE, expectedCode);
+                String expectedOutput = JavaFileCompiler.compileAndRun(SOURCE_FILE, input).trim();
+    
+                // Step 2: Run submitted code
+                writeToFile(SOURCE_FILE, code);
+                String actualOutput = JavaFileCompiler.compileAndRun(SOURCE_FILE, input).trim();
+    
+                // Step 3: Compare outputs
+                if (expectedOutput.equals(actualOutput)) {
+                    passed++;
+                    resultBuilder.append("Test ").append(testCaseNumber).append(": Success\n");
+                } else {
+                    resultBuilder.append("Test ").append(testCaseNumber)
+                                 .append(": Failed (Expected: ")
+                                 .append(expectedOutput).append(", Got: ")
+                                 .append(actualOutput).append(")\n");
+                }
+            } catch (Exception e) {
+                resultBuilder.append("Test ").append(testCaseNumber)
+                             .append(": Error executing code - ")
+                             .append(e.getMessage()).append("\n");
+            }
+        }
+    
+        String summary = "Passed " + passed + "/" + testCases.size() + " test cases.\n\n";
+        resultBuilder.insert(0, summary);
+    
+        try {
+            sendJsonResponse(out, 200, Map.of("result", resultBuilder.toString()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+
+    private void writeToFile(String filename, String content) throws IOException {
+        try (FileWriter writer = new FileWriter(filename)) {
+            writer.write(content);
+        }
+    }
+
 }
