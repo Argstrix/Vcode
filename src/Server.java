@@ -112,8 +112,6 @@ class ClientHandler implements Runnable {
                     // Use your existing helper
                     System.out.println(responseBody);
                     sendJsonResponse(out, 200, responseBody,origin);
-
-
                 }
                 else if (method.equals("GET") && path.equals("/submissions")) {
                     List<Map<String, String>> submissions = readSubmissionsFromFirebase();
@@ -177,7 +175,38 @@ class ClientHandler implements Runnable {
                     String output = JavaFileCompiler.compileAndRun(SOURCE_FILE, testInput);
                     System.out.println(output);
                     sendJsonResponse(out, 200, Map.of("output", output));
-                } else {
+                } else if (method.equals("POST") && path.equals("/addQuestion")) {
+                    try {
+                        System.out.println("Received /addQuestion request with body: " + requestBody);
+                        JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
+                
+                        Map<String, Object> question = new HashMap<>();
+                        question.put("id", jsonObject.get("id").getAsInt());
+                        question.put("title", jsonObject.get("title").getAsString());
+                        question.put("difficulty", jsonObject.get("diff").getAsString());
+                        question.put("description", jsonObject.get("desc").getAsString());
+                
+                        List<String> tags = new ArrayList<>();
+                        JsonArray tagsArray = jsonObject.get("tags").getAsJsonArray();
+                        for (JsonElement element : tagsArray) {
+                            tags.add(element.getAsString());
+                        }
+                        question.put("tags", tags);
+                
+                        System.out.println("Parsed question: " + question);
+                
+                        boolean success = addQuestionToFirebase(question);
+                        if (success) {
+                            sendJsonResponse(out, 200, Map.of("message", "Question added successfully"));
+                        } else {
+                            System.err.println("Failed to add question in addQuestionToFirebase()");
+                            sendJsonResponse(out, 500, Map.of("error", "Failed to add question"));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        sendJsonResponse(out, 500, Map.of("error", "Exception while adding question"));
+                    }
+                }else {
                     sendJsonResponse(out, 404, Map.of("error", "Not Found"));
                 }
             } catch (Exception e) {
@@ -257,6 +286,35 @@ class ClientHandler implements Runnable {
         return questions;
     }
     
+    public boolean addQuestionToFirebase(Map<String, Object> questionData) {
+        try {
+            URL url = new URL("https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions.json");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; utf-8");
+            conn.setDoOutput(true);
+    
+            String jsonInput = new Gson().toJson(questionData);
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInput.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+    
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK || responseCode == HttpURLConnection.HTTP_CREATED) {
+                System.out.println("✅ Question added successfully.");
+                return true;
+            } else {
+                System.err.println("Failed to add question. Response code: " + responseCode);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    
+
 
     private void pushSubmissionToFirebase(Map<String, String> submission) {
         try {

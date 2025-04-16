@@ -30,6 +30,10 @@ const ProblemList = () => {
         navigate(`/editProblem/${problemId}`);
     };
 
+    const handleAddProblemClick = () => {
+        navigate("/add-problem");
+    };
+
     return (
         <div className="overflow-auto">
             <h2 className="problemList-title">Problem List</h2>
@@ -41,6 +45,16 @@ const ProblemList = () => {
                     className="form-control bg-dark text-white"
                     placeholder="Search problem..."
                 />
+            </div>
+
+            {/* ✅ Add Problem Button */}
+            <div className="mb-4">
+                <button
+                    className="btn btn-success"
+                    onClick={handleAddProblemClick}
+                >
+                    ➕ Add New Problem
+                </button>
             </div>
 
             <ul className="list-group">

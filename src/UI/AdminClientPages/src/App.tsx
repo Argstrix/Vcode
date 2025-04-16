@@ -6,12 +6,14 @@ import SubmissionList from "./components/SubmissionList";
 import Dashboard from "./pages/Dashboard";
 import EditProblem from "./components/EditProblem";
 import ClientDashBoard from "./pages/ClientDashBoard";
-import ClientLayout from "./components/ClientLayout"; // Client Layout
+import ClientLayout from "./components/ClientLayout";
 import ProblemPage from "./components/ProblemPage";
 import ClientProblemList from "./components/ClientProblemList";
+import AddProblem from "./components/AddProblem"; // ✅ New import
 
 // Toggle between Admin & Client by changing this variable
-const isAdmin = false; // Set to `false` for client mode
+const isAdmin = true;   
+// Set to `false` for client mode
 
 function App() {
     return (
@@ -22,37 +24,20 @@ function App() {
                     <Route path="/" element={<AdminLayout />}>
                         <Route index element={<Dashboard />} />
                         <Route path="problems" element={<ProblemList />} />
-                        <Route
-                            path="manage-problem"
-                            element={<ManageProblem />}
-                        />
-                        <Route
-                            path="submissions"
-                            element={<SubmissionList />}
-                        />
+                        <Route path="manage-problem" element={<ManageProblem />} />
+                        <Route path="submissions" element={<SubmissionList />} />
                         <Route path="analytics" element={<ManageProblem />} />
                         <Route path="settings" element={<ManageProblem />} />
-                        <Route
-                            path="/editProblem/:id"
-                            element={<EditProblem />}
-                        />
+                        <Route path="/editProblem/:id" element={<EditProblem />} />
+                        <Route path="add-problem" element={<AddProblem />} /> {/* ✅ New Route */}
                     </Route>
                 ) : (
                     // Client Routes
                     <Route path="/" element={<ClientLayout />}>
                         <Route index element={<ClientDashBoard />} />
-                        <Route
-                            path="cproblems"
-                            element={<ClientProblemList />}
-                        />
-                        <Route
-                            path="csubmissions"
-                            element={<SubmissionList />}
-                        />
-                        <Route
-                            path="problempage/:id"
-                            element={<ProblemPage />}
-                        />
+                        <Route path="cproblems" element={<ClientProblemList />} />
+                        <Route path="csubmissions" element={<SubmissionList />} />
+                        <Route path="problempage/:id" element={<ProblemPage />} />
                     </Route>
                 )}
             </Routes>
