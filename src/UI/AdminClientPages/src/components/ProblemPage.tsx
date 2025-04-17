@@ -44,6 +44,34 @@ const ProblemPage: React.FC = () => {
         if (id) fetchProblemDetails();
     }, [id]);
 
+    const handleSubmitCode = async () => {
+        setOutput("Submitting code...");
+    
+        const requestBody = {
+            language,
+            code,
+            problemId: id,
+        };
+    
+        try {
+            const response = await fetch("http://localhost:8080/submitCode", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(requestBody),
+            });
+    
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+    
+            const data = await response.json();
+            setOutput(data.result || "No result received from server.");
+        } catch (error) {
+            console.error("Error submitting code:", error);
+            setOutput("Error submitting code.");
+        }
+    };
+    
     const handleRunCode = async () => {
         setOutput("Running code...");
 
@@ -136,7 +164,7 @@ const ProblemPage: React.FC = () => {
                             >
                                 Run
                             </button>
-                            <button className="btn submit-btn">Submit</button>
+                            <button className="btn submit-btn" onClick={handleSubmitCode}>Submit</button>
                         </div>
 
                         {/* Output Display */}
