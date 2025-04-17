@@ -5,6 +5,7 @@ import "bootstrap/dist/js/bootstrap.bundle.min";
 import "../styles/AdminProblemForm.css";
 
 interface ProblemData {
+  id?: string; // NEW: id as string for form control
   title?: string;
   difficulty?: string;
   tags?: string;
@@ -24,19 +25,17 @@ const AdminProblemForm: React.FC<AdminProblemFormProps> = ({
   initialData = {},
   onSubmit,
 }) => {
+  const [id, setId] = useState(initialData.id || "");
   const [title, setTitle] = useState(initialData.title || "");
-  const [difficulty, setDifficulty] = useState(
-    initialData.difficulty || "Easy"
-  );
+  const [difficulty, setDifficulty] = useState(initialData.difficulty || "Easy");
   const [tags, setTags] = useState(initialData.tags || "");
   const [description, setDescription] = useState(initialData.description || "");
-  const [code, setCode] = useState(
-    initialData.code || "// Write sample code here"
-  );
+  const [code, setCode] = useState(initialData.code || "// Write sample code here");
   const [language, setLanguage] = useState(initialData.language || "java");
 
   useEffect(() => {
-    if (initialData.title || initialData.description || initialData.code) {
+    if (initialData.id || initialData.title || initialData.description || initialData.code) {
+      setId(initialData.id || "");
       setTitle(initialData.title || "");
       setDifficulty(initialData.difficulty || "Easy");
       setTags(initialData.tags || "");
@@ -49,6 +48,7 @@ const AdminProblemForm: React.FC<AdminProblemFormProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const problemData: ProblemData = {
+      id,
       title,
       difficulty,
       tags: tags.trim(),
@@ -64,6 +64,15 @@ const AdminProblemForm: React.FC<AdminProblemFormProps> = ({
     <div className="admin-form-container">
       <h2 className="form-title">{formTitle}</h2>
       <form onSubmit={handleSubmit}>
+        <label>ID</label>
+        <input
+          className="form-input"
+          type="number"
+          value={id}
+          onChange={(e) => setId(e.target.value)}
+          required
+        />
+
         <label>Title</label>
         <input
           className="form-input"
@@ -130,7 +139,7 @@ const AdminProblemForm: React.FC<AdminProblemFormProps> = ({
         <div className="editor-container">
           <Editor
             height="400px"
-            language={language} // Monaco Editor updates language dynamically
+            language={language}
             theme="vs-dark"
             value={code}
             onChange={(value) => setCode(value || "")}
