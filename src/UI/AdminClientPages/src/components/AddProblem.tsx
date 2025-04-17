@@ -1,4 +1,3 @@
-import React from "react";
 import AdminProblemForm from "./AdminProblemForm";
 
 const AddProblem = () => {
@@ -14,7 +13,10 @@ const AddProblem = () => {
             title: formData.title,
             diff: formData.difficulty,
             desc: formData.description,
-            tags: formData.tags.split(",").map((tag: string) => tag.trim()),
+            tags: (formData.tags || "")
+                .split(",")
+                .map((tag: string) => tag.trim())
+                .filter((tag: string) => tag.length > 0),
             code: formData.code,
         };
 

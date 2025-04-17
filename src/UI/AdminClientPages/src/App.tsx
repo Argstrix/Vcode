@@ -12,7 +12,7 @@ import ClientProblemList from "./components/ClientProblemList";
 import AddProblem from "./components/AddProblem"; // ✅ New import
 
 // Toggle between Admin & Client by changing this variable
-const isAdmin = true;   
+const isAdmin = false;   
 // Set to `false` for client mode
 
 function App() {
