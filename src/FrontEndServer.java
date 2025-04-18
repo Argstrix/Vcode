@@ -55,22 +55,12 @@ public class FrontEndServer {
 
             if (request.startsWith("GET /get-port")) {
                 handleApiRequest(out);
-<<<<<<< HEAD
-            } else if(request.startsWith("GET /change-context")){
-
-            }else if (request.startsWith("GET / ")) {
-                serveStaticFile("LoginPage.html", out);
-            } else if (request.startsWith("GET /")) {  // Serve any static file inside UI/LoginPages
-                String filePath = request.split(" ")[1].substring(1); // Remove `/` from start
-                serveStaticFile(filePath, out);
-=======
             } else if (request.startsWith("GET / ")) {
                 serveStaticFile("index.html", out, currentBaseDir);
             } else if (request.startsWith("GET /")) {
                 String filePath = request.split(" ")[1].substring(1);
                 if (filePath.isEmpty()) filePath = "index.html";
                 serveStaticFile(filePath, out, currentBaseDir);
->>>>>>> 59b70c6b33e93986c1d2cb7d0e983d23acc9da60
             } else if (request.startsWith("OPTIONS")) {
                 handlePreflightRequest(out);
             } else if (request.startsWith("POST /change-context")) {
