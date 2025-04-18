@@ -123,44 +123,59 @@ document.addEventListener("DOMContentLoaded", async function () {
                 printLine("> Initializing secure session...");
 
                 try {
-                    // Get the backend port first
-                    const response = await fetch(`${API_BASE_URL}/get-port`);
-                    const data = await response.json();
-                    API_BASE_URL = `http://localhost:${data.port}`;
-                    console.log("Using backend port:", API_BASE_URL);
-
-                    // Send the role and let the backend handle redirection
-                    const roleResponse = await fetch(
-                        API_BASE_URL + "/store-role",
-                        {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                email: userEmail,
-                                role: role,
-                                port: data.port,
-                            }),
-                            credentials: "include", // Ensures cookies are sent
-                        }
+                    // Step 1: Get backend port
+                    const response = await fetch(
+                        "http://localhost:9000/get-port"
                     );
+                    const data = await response.json();
+                    const backendURL = `http://localhost:${data.port}`;
+                    console.log("Using backend port:", backendURL);
 
-                    if (roleResponse.redirected) {
-                        console.log("> Redirecting to:", roleResponse.url);
-                        window.location.href = roleResponse.url;
-                    } else {
-                        const roleData = await roleResponse.json();
-                        console.log("Server Response:", roleData);
+                    // Step 2: Store role
+                    await fetch(backendURL + "/store-role", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            email: userEmail,
+                            role: role,
+                            port: data.port,
+                        }),
+                        credentials: "include",
+                    });
 
-                        if (roleData.redirect) {
-                            console.log("> Redirecting to:", roleData.redirect);
-                            window.location.href = roleData.redirect;
-                        }
-                    }
+                    // Step 3: Save data in localStorage
+                    localStorage.setItem("userEmail", userEmail);
+                    localStorage.setItem("userRole", role);
+                    localStorage.setItem("userPort", data.port);
+
+                    // Step 4: Change context at 9000
+                    await fetch("http://localhost:9000/change-context", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            baseURL: backendURL,
+                            userEmail: userEmail,
+                            role: role,
+                        }),
+                    })
+                        .then((res) => {
+                            if (res.ok) {
+                                // 💥 Navigate to the new app manually (React side)
+                                console.log("Refreshed");
+                                window.location.href = "http://localhost:9000/";
+                            }
+                        })
+                        .catch((err) =>
+                            console.error("Context change failed", err)
+                        );
+
+                    printLine("> Session data saved locally.");
                 } catch (error) {
                     console.error(
                         "Error during session initialization:",
                         error
                     );
+                    printLine("> ERROR: Failed to initialize session.");
                 }
 
                 setTimeout(() => {
