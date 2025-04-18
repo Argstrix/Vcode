@@ -2,12 +2,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     const terminalInput = document.getElementById("terminal-input");
     const commandDisplay = document.getElementById("command");
     const outputDisplay = document.getElementById("output");
-
     let username = "";
     let step = 0; // Step 0: Enter username, Step 1: Enter password
     let wrongPass = 0;
     terminalInput.focus();
     let API_BASE_URL = "http://localhost:9000";
+
     // Initialize Firebase (Replace with your Firebase config)
     const firebaseConfig = {
         apiKey: "AIzaSyAd0yxPkMVoerKq6pPZvXyTbOEaMILss4A",
@@ -22,6 +22,128 @@ document.addEventListener("DOMContentLoaded", async function () {
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
     const db = firebase.firestore();
+
+    // Session Manager Class
+    class SessionManager {
+        constructor() {
+            this.sessionId = this.getSessionId();
+        }
+        
+        // Get session ID from localStorage or create a new one
+        getSessionId() {
+            let sessionId = localStorage.getItem('sessionId');
+            if (!sessionId) {
+                console.log('No session ID found in localStorage');
+            } else {
+                console.log('Using session ID from localStorage:', sessionId);
+            }
+            return sessionId;
+        }
+        
+        // Save session ID to localStorage
+        saveSessionId(sessionId) {
+            if (sessionId) {
+                localStorage.setItem('sessionId', sessionId);
+                console.log('Session ID saved to localStorage:', sessionId);
+                this.sessionId = sessionId;
+            }
+        }
+        
+        // Clear session data
+        clearSession() {
+            localStorage.removeItem('sessionId');
+            console.log('Session cleared from localStorage');
+            this.sessionId = null;
+        }
+        
+        // Check if we have a session
+        hasSession() {
+            return !!this.sessionId;
+        }
+    }
+
+    // API Client with session handling
+    class ApiClient {
+        constructor() {
+            this.baseUrl = API_BASE_URL;
+            this.sessionManager = new SessionManager();
+        }
+        
+        // Get port from server
+        async getPort() {
+            try {
+                const response = await fetch(`${this.baseUrl}/get-port`, {
+                    method: 'GET',
+                    credentials: 'include' // This ensures cookies are sent
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // If the response contains a sessionId, save it
+                if (data.sessionId) {
+                    this.sessionManager.saveSessionId(data.sessionId);
+                }
+                
+                return data.port;
+            } catch (error) {
+                console.error('Error getting port:', error);
+                throw error;
+            }
+        }
+        
+        // Change context (e.g., switch to admin pages)
+        async changeContext(userData) {
+            try {
+                const response = await fetch(`${this.baseUrl}/change-context`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        sessionId: this.sessionManager.sessionId,
+                        baseURL: userData.baseURL,
+                        userEmail: userData.userEmail,
+                        role: userData.role
+                    }),
+                    credentials: 'include' // This ensures cookies are sent
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // If the response contains a sessionId, save it
+                if (data.sessionId) {
+                    this.sessionManager.saveSessionId(data.sessionId);
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('Error changing context:', error);
+                throw error;
+            }
+        }
+    }
+
+    // Create instances
+    const sessionManager = new SessionManager();
+    const apiClient = new ApiClient();
+
+    // Check for cookies and update localStorage if needed
+    const cookies = document.cookie.split(';');
+    for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split('=');
+        if (name === 'sessionId') {
+            sessionManager.saveSessionId(value);
+            break;
+        }
+    }
 
     function printLine(text, delay = 500) {
         setTimeout(() => {
@@ -52,9 +174,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (step === 0) {
             username = command;
             printLine(`\n> Searching for user: ${username}...`);
-
             const email = await fetchUserData(username);
-
             if (email) {
                 printLine("> Username accepted");
                 setTimeout(() => {
@@ -68,7 +188,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         } else if (step === 1) {
             const password = command;
             console.log("Logging in with:", username, password);
-
             const userData = await fetchUserData(username);
             if (userData.email) {
                 verifyPassword(userData.email, password, userData.role);
@@ -84,7 +203,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 .collection("users")
                 .where("username", "==", username)
                 .get();
-
             if (!querySnapshot.empty) {
                 let userData = null;
                 querySnapshot.forEach((doc) => {
@@ -102,35 +220,31 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    function getBackendPort() {
-        fetch(`${API_BASE_URL}/get-port`)
-            .then((response) => response.json())
-            .then((data) => {
-                API_BASE_URL = `http://localhost:${data.port}`;
-                console.log("Using backend port:", API_BASE_URL);
-            })
-            .catch((error) =>
-                console.error("Error fetching backend port:", error)
-            );
+    async function getBackendPort() {
+        try {
+            // Use the new apiClient instead of direct fetch
+            const port = await apiClient.getPort();
+            API_BASE_URL = `http://localhost:${port}`;
+            console.log("Using backend port:", API_BASE_URL);
+            return port;
+        } catch (error) {
+            console.error("Error fetching backend port:", error);
+            return null;
+        }
     }
 
     async function verifyPassword(userEmail, inputPassword, role) {
         try {
             await auth.signInWithEmailAndPassword(userEmail, inputPassword);
             printLine("> Access granted. Welcome, " + userEmail + "!");
-    
             setTimeout(async () => {
                 printLine("> Initializing secure session...");
-    
                 try {
-                    // Step 1: Get backend port
-                    const response = await fetch(
-                        "http://localhost:9000/get-port"
-                    );
-                    const data = await response.json();
-                    const backendURL = `http://localhost:${data.port}`;
+                    // Step 1: Get backend port using the session-aware client
+                    const port = await apiClient.getPort();
+                    const backendURL = `http://localhost:${port}`;
                     console.log("Using backend port:", backendURL);
-
+                    
                     // Step 2: Store role
                     await fetch(backendURL + "/store-role", {
                         method: "POST",
@@ -138,46 +252,38 @@ document.addEventListener("DOMContentLoaded", async function () {
                         body: JSON.stringify({
                             email: userEmail,
                             role: role,
-                            port: data.port,
+                            port: port,
                         }),
                         credentials: "include",
                     });
-
+                    
                     // Step 3: Save data in localStorage
                     localStorage.setItem("userEmail", userEmail);
                     localStorage.setItem("userRole", role);
-                    localStorage.setItem("userPort", data.port);
-
-                    // Step 4: Change context at 9000
-                    await fetch("http://localhost:9000/change-context", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            baseURL: backendURL,
-                            userEmail: userEmail,
-                            role: role,
-                        }),
+                    localStorage.setItem("userPort", port);
+                    
+                    // Step 4: Change context using the session-aware client
+                    await apiClient.changeContext({
+                        baseURL: backendURL,
+                        userEmail: userEmail,
+                        role: role
                     })
-                        .then((res) => {
-                            if (res.ok) {
-                                // 💥 Navigate to the new app manually (React side)
-                                console.log("Refreshed");
-                                window.location.href = "http://localhost:9000/";
-                            }
-                        })
-                        .catch((err) =>
-                            console.error("Context change failed", err)
-                        );
-
+                    .then((res) => {
+                        // Navigate to the new app manually (React side)
+                        console.log("Context changed successfully");
+                        window.location.href = "http://localhost:9000/";
+                    })
+                    .catch((err) => {
+                        console.error("Context change failed", err);
+                        printLine("> ERROR: Failed to change context.");
+                    });
+                    
                     printLine("> Session data saved locally.");
                 } catch (error) {
-                    console.error(
-                        "Error during session initialization:",
-                        error
-                    );
+                    console.error("Error during session initialization:", error);
                     printLine("> ERROR: Failed to initialize session.");
                 }
-    
+                
                 setTimeout(() => {
                     printLine("> Connection Established.");
                 }, 1000);
@@ -187,13 +293,11 @@ document.addEventListener("DOMContentLoaded", async function () {
             printLine("> ERROR: Incorrect password. Try again.");
             console.error("Firebase Auth Error:", error);
             if (wrongPass > 2) {
-                printLine(
-                    "> Forgot password? Type 'forgot --help' for assistance."
-                );
+                printLine("> Forgot password? Type 'forgot --help' for assistance.");
             }
         }
     }
-    
+
     // Typing animation for initial text
     const initialText = "> Welcome to Vcode.\n> Please enter your username:";
     let index = 0;
@@ -204,5 +308,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             setTimeout(typeInitialText, 50);
         }
     }
+
     typeInitialText();
 });

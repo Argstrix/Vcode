@@ -15,7 +15,7 @@ import { useUser } from "./context/UserContext"; // ✅ using context
 function App() {
     const { role } = useUser(); // ✅ use inside the function
 
-    const isAdmin = () => role === "admin";
+    const isAdmin = () => role === "teacher";
     const isStudent = () => role === "student";
 
     return (
