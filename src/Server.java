@@ -105,9 +105,9 @@ class ClientHandler implements Runnable {
                     String serverIp = clientSocket.getLocalAddress().getHostAddress();
                     responseBody.put("redirect", "http://" + "localhost" + ":9001/");
                     responseBody.put("setCookies", new String[] {
-                        "userEmail=" + URLEncoder.encode(email, "UTF-8") + "; Path=/; HttpOnly",
-                        "userRole=" + URLEncoder.encode(role, "UTF-8") + "; Path=/; HttpOnly",
-                        "backendPort=" + backendPort + "; Path=/; HttpOnly"
+                        "userEmail=" + URLEncoder.encode(email, "UTF-8") + "; Path=/;",
+                        "userRole=" + URLEncoder.encode(role, "UTF-8") + "; Path=/;",
+                        "backendPort=" + backendPort + "; Path=/;"
                     });
                     // Use your existing helper
                     System.out.println(responseBody);
