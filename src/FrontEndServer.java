@@ -50,7 +50,9 @@ public class FrontEndServer {
     
             if (request.startsWith("GET /get-port")) {
                 handleApiRequest(out);
-            } else if (request.startsWith("GET / ")) {
+            } else if(request.startsWith("GET /change-context")){
+
+            }else if (request.startsWith("GET / ")) {
                 serveStaticFile("LoginPage.html", out);
             } else if (request.startsWith("GET /")) {  // Serve any static file inside UI/LoginPages
                 String filePath = request.split(" ")[1].substring(1); // Remove `/` from start

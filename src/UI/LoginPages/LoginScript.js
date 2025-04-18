@@ -118,17 +118,17 @@ document.addEventListener("DOMContentLoaded", async function () {
         try {
             await auth.signInWithEmailAndPassword(userEmail, inputPassword);
             printLine("> Access granted. Welcome, " + userEmail + "!");
-
+    
             setTimeout(async () => {
                 printLine("> Initializing secure session...");
-
+    
                 try {
                     // Get the backend port first
                     const response = await fetch(`${API_BASE_URL}/get-port`);
                     const data = await response.json();
                     API_BASE_URL = `http://localhost:${data.port}`;
                     console.log("Using backend port:", API_BASE_URL);
-
+    
                     // Send the role and let the backend handle redirection
                     const roleResponse = await fetch(
                         API_BASE_URL + "/store-role",
@@ -143,26 +143,56 @@ document.addEventListener("DOMContentLoaded", async function () {
                             credentials: "include", // Ensures cookies are sent
                         }
                     );
-
+    
                     if (roleResponse.redirected) {
                         console.log("> Redirecting to:", roleResponse.url);
                         window.location.href = roleResponse.url;
                     } else {
                         const roleData = await roleResponse.json();
                         console.log("Server Response:", roleData);
-
+    
                         if (roleData.redirect) {
                             console.log("> Redirecting to:", roleData.redirect);
                             window.location.href = roleData.redirect;
                         }
                     }
+    
+                    // Now handle /change-context without sending cookies (to port 9000)
+                    setTimeout(async () => {
+                        try {
+                            const changeContextResponse = await fetch('http://localhost:9000/change-context', {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    email: userEmail,
+                                    role: role,
+                                    port: data.port,
+                                }),
+                                // No credentials sent here, so cookies won't be included
+                            });
+    
+                            if (changeContextResponse.redirected) {
+                                console.log("> Redirecting to:", changeContextResponse.url);
+                                window.location.href = changeContextResponse.url;
+                            } else {
+                                const changeContextData = await changeContextResponse.json();
+                                console.log("Context Change Response:", changeContextData);
+    
+                                // If the context change requires redirection
+                                if (changeContextData.redirect) {
+                                    console.log("> Redirecting to:", changeContextData.redirect);
+                                    window.location.href = changeContextData.redirect;
+                                }
+                            }
+                        } catch (error) {
+                            console.error("Error during context change:", error);
+                        }
+                    }, 1500);
+    
                 } catch (error) {
-                    console.error(
-                        "Error during session initialization:",
-                        error
-                    );
+                    console.error("Error during session initialization:", error);
                 }
-
+    
                 setTimeout(() => {
                     printLine("> Connection Established.");
                 }, 1000);
@@ -178,7 +208,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
         }
     }
-
+    
     // Typing animation for initial text
     const initialText = "> Welcome to Vcode.\n> Please enter your username:";
     let index = 0;
