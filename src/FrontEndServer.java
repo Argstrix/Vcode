@@ -270,7 +270,7 @@ public class FrontEndServer {
         out.flush();
     }
 
-    // private static void handlePreflightRequest(OutputStream out) throws IOException {
+    // private static void handlePreflightRequest (OutputStream out) throws IOException {
     //     String preflightResponse = "HTTP/1.1 204 No Content\r\n"
     //                             + "Access-Control-Allow-Origin: http://localhost:9000\r\n"
     //                             + "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
