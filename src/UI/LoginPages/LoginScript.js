@@ -28,34 +28,34 @@ document.addEventListener("DOMContentLoaded", async function () {
         constructor() {
             this.sessionId = this.getSessionId();
         }
-        
+
         // Get session ID from localStorage or create a new one
         getSessionId() {
-            let sessionId = localStorage.getItem('sessionId');
+            let sessionId = localStorage.getItem("sessionId");
             if (!sessionId) {
-                console.log('No session ID found in localStorage');
+                console.log("No session ID found in localStorage");
             } else {
-                console.log('Using session ID from localStorage:', sessionId);
+                console.log("Using session ID from localStorage:", sessionId);
             }
             return sessionId;
         }
-        
+
         // Save session ID to localStorage
         saveSessionId(sessionId) {
             if (sessionId) {
-                localStorage.setItem('sessionId', sessionId);
-                console.log('Session ID saved to localStorage:', sessionId);
+                localStorage.setItem("sessionId", sessionId);
+                console.log("Session ID saved to localStorage:", sessionId);
                 this.sessionId = sessionId;
             }
         }
-        
+
         // Clear session data
         clearSession() {
-            localStorage.removeItem('sessionId');
-            console.log('Session cleared from localStorage');
+            localStorage.removeItem("sessionId");
+            console.log("Session cleared from localStorage");
             this.sessionId = null;
         }
-        
+
         // Check if we have a session
         hasSession() {
             return !!this.sessionId;
@@ -68,64 +68,74 @@ document.addEventListener("DOMContentLoaded", async function () {
             this.baseUrl = API_BASE_URL;
             this.sessionManager = new SessionManager();
         }
-        
+
         // Get port from server
         async getPort() {
             try {
                 const response = await fetch(`${this.baseUrl}/get-port`, {
-                    method: 'GET',
-                    credentials: 'include' // This ensures cookies are sent
+                    method: "GET",
+                    credentials: "include", // This ensures cookies are sent
                 });
-                
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
-                
+
                 const data = await response.json();
-                
+
                 // If the response contains a sessionId, save it
                 if (data.sessionId) {
                     this.sessionManager.saveSessionId(data.sessionId);
                 }
-                
+
                 return data.port;
             } catch (error) {
-                console.error('Error getting port:', error);
+                console.error("Error getting port:", error);
                 throw error;
             }
         }
-        
+
         // Change context (e.g., switch to admin pages)
         async changeContext(userData) {
             try {
+                console.log("Attempting context change with data:", userData);
+                console.log(this.baseUrl);
                 const response = await fetch(`${this.baseUrl}/change-context`, {
-                    method: 'POST',
+                    method: "POST",
                     headers: {
-                        'Content-Type': 'application/json'
+                        "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
                         sessionId: this.sessionManager.sessionId,
                         baseURL: userData.baseURL,
                         userEmail: userData.userEmail,
-                        role: userData.role
+                        role: userData.role,
                     }),
-                    credentials: 'include' // This ensures cookies are sent
+                    credentials: "include", // This ensures cookies are sent
                 });
-                
+
+                // Check if the response is OK (status in the range 200-299)
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error(
+                        `Server returned ${response.status}: ${errorText}`
+                    );
+                    throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                
+
+                // Parse the JSON response
                 const data = await response.json();
-                
+                console.log("Context change response:", data);
+
                 // If the response contains a sessionId, save it
                 if (data.sessionId) {
                     this.sessionManager.saveSessionId(data.sessionId);
+                    console.log("Session ID updated:", data.sessionId);
                 }
-                
+
                 return data;
             } catch (error) {
-                console.error('Error changing context:', error);
+                console.error("Error changing context:", error);
                 throw error;
             }
         }
@@ -136,10 +146,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     const apiClient = new ApiClient();
 
     // Check for cookies and update localStorage if needed
-    const cookies = document.cookie.split(';');
+    const cookies = document.cookie.split(";");
     for (const cookie of cookies) {
-        const [name, value] = cookie.trim().split('=');
-        if (name === 'sessionId') {
+        const [name, value] = cookie.trim().split("=");
+        if (name === "sessionId") {
             sessionManager.saveSessionId(value);
             break;
         }
@@ -235,65 +245,99 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     async function verifyPassword(userEmail, inputPassword, role) {
         try {
+            // Step 1: Authenticate with Firebase
             await auth.signInWithEmailAndPassword(userEmail, inputPassword);
             printLine("> Access granted. Welcome, " + userEmail + "!");
+
+            // Step 2: Initialize session (with delay for UI feedback)
             setTimeout(async () => {
-                printLine("> Initializing secure session...");
                 try {
-                    // Step 1: Get backend port using the session-aware client
+                    printLine("> Initializing secure session...");
+
+                    // Step 3: Get backend port
                     const port = await apiClient.getPort();
+                    if (!port) {
+                        throw new Error("Failed to get backend port");
+                    }
+
                     const backendURL = `http://localhost:${port}`;
                     console.log("Using backend port:", backendURL);
-                    
-                    // Step 2: Store role
-                    await fetch(backendURL + "/store-role", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                            email: userEmail,
-                            role: role,
-                            port: port,
-                        }),
-                        credentials: "include",
-                    });
-                    
-                    // Step 3: Save data in localStorage
+
+                    // Step 4: Store role on backend
+                    const roleResponse = await fetch(
+                        backendURL + "/store-role",
+                        {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({
+                                email: userEmail,
+                                role: role,
+                                port: port,
+                            }),
+                            credentials: "include",
+                        }
+                    );
+
+                    // Check if role storage was successful
+                    if (!roleResponse.ok) {
+                        throw new Error(
+                            `Failed to store role: ${roleResponse.status}`
+                        );
+                    }
+
+                    // Step 5: Save data in localStorage
                     localStorage.setItem("userEmail", userEmail);
                     localStorage.setItem("userRole", role);
                     localStorage.setItem("userPort", port);
-                    
-                    // Step 4: Change context using the session-aware client
-                    await apiClient.changeContext({
-                        baseURL: backendURL,
-                        userEmail: userEmail,
-                        role: role
-                    })
-                    .then((res) => {
-                        // Navigate to the new app manually (React side)
-                        console.log("Context changed successfully");
-                        window.location.href = "http://localhost:9000/";
-                    })
-                    .catch((err) => {
-                        console.error("Context change failed", err);
-                        printLine("> ERROR: Failed to change context.");
-                    });
-                    
                     printLine("> Session data saved locally.");
-                } catch (error) {
-                    console.error("Error during session initialization:", error);
-                    printLine("> ERROR: Failed to initialize session.");
+
+                    // Step 6: Change context using the session-aware client
+                    // Use proper async/await pattern instead of mixing with then/catch
+                    try {
+                        console.log("fetch poten pa");
+                        const contextResponse = await apiClient.changeContext({
+                            baseURL: backendURL,
+                            userEmail: userEmail,
+                            role: role,
+                        });
+                        console.log("fetch vandhirchu pa");
+                        // Log success and redirect
+                        console.log(
+                            "Context changed successfully",
+                            contextResponse
+                        );
+                        printLine("> Context switched successfully.");
+
+                        // Add a small delay before redirecting to ensure UI updates
+                        setTimeout(() => {
+                            printLine("> Connection Established.");
+                            printLine("> Redirecting to application...");
+                            window.location.href = "http://localhost:9000/";
+                        }, 1000);
+                    } catch (contextError) {
+                        console.error("Context change failed", contextError);
+                        printLine("> ERROR: Failed to change context.");
+                        throw contextError; // Re-throw to be caught by outer catch
+                    }
+                } catch (sessionError) {
+                    console.error(
+                        "Error during session initialization:",
+                        sessionError
+                    );
+                    printLine(
+                        "> ERROR: Failed to initialize session: " +
+                            sessionError.message
+                    );
                 }
-                
-                setTimeout(() => {
-                    printLine("> Connection Established.");
-                }, 1000);
             }, 1500);
-        } catch (error) {
+        } catch (authError) {
             wrongPass++;
             printLine("> ERROR: Incorrect password. Try again.");
-            console.error("Firebase Auth Error:", error);
+            console.error("Firebase Auth Error:", authError);
             if (wrongPass > 2) {
-                printLine("> Forgot password? Type 'forgot --help' for assistance.");
+                printLine(
+                    "> Forgot password? Type 'forgot --help' for assistance."
+                );
             }
         }
     }

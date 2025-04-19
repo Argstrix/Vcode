@@ -21,27 +21,49 @@ function App() {
     return (
         <Router>
             <Routes>
+                {/* isAdmin() */}
                 {isAdmin() ? (
                     <Route path="/" element={<AdminLayout />}>
                         <Route index element={<Dashboard />} />
                         <Route path="problems" element={<ProblemList />} />
-                        <Route path="manage-problem" element={<ManageProblem />} />
-                        <Route path="submissions" element={<SubmissionList />} />
+                        <Route
+                            path="manage-problem"
+                            element={<ManageProblem />}
+                        />
+                        <Route
+                            path="submissions"
+                            element={<SubmissionList />}
+                        />
                         <Route path="analytics" element={<ManageProblem />} />
                         <Route path="settings" element={<ManageProblem />} />
-                        <Route path="/editProblem/:id" element={<EditProblem />} />
+                        <Route
+                            path="/editProblem/:id"
+                            element={<EditProblem />}
+                        />
                         <Route path="add-problem" element={<AddProblem />} />
                     </Route>
                 ) : isStudent() ? (
                     <Route path="/" element={<ClientLayout />}>
                         <Route index element={<ClientDashBoard />} />
-                        <Route path="cproblems" element={<ClientProblemList />} />
-                        <Route path="csubmissions" element={<SubmissionList />} />
-                        <Route path="problempage/:id" element={<ProblemPage />} />
+                        <Route
+                            path="cproblems"
+                            element={<ClientProblemList />}
+                        />
+                        <Route
+                            path="csubmissions"
+                            element={<SubmissionList />}
+                        />
+                        <Route
+                            path="problempage/:id"
+                            element={<ProblemPage />}
+                        />
                     </Route>
                 ) : (
                     // fallback if role is invalid
-                    <Route path="*" element={<div>Unauthorized or unknown role</div>} />
+                    <Route
+                        path="*"
+                        element={<div>Unauthorized or unknown role</div>}
+                    />
                 )}
             </Routes>
         </Router>
@@ -49,4 +71,3 @@ function App() {
 }
 
 export default App;
-        

@@ -1,16 +1,18 @@
-document.getElementById('signup-form').addEventListener('submit', function(event) {
-    event.preventDefault();
-    
-    let username = document.getElementById('username').value;
-    let email = document.getElementById('email').value;
-    let password = document.getElementById('password').value;
-    let confirmPassword = document.getElementById('confirm-password').value;
+document
+    .getElementById("signup-form")
+    .addEventListener("submit", function (event) {
+        event.preventDefault();
 
-    if (password !== confirmPassword) {
-        alert("Passwords do not match!");
-        return;
-    }
+        let username = document.getElementById("username").value;
+        let email = document.getElementById("email").value;
+        let password = document.getElementById("password").value;
+        let confirmPassword = document.getElementById("confirm-password").value;
 
-    alert(`Welcome, ${username}! You have successfully signed up.`);
-    window.location.href = "LoginPage.html";
-});
+        if (password !== confirmPassword) {
+            alert("Passwords do not match!");
+            return;
+        }
+
+        alert(`Welcome, ${username}! You have successfully signed up.`);
+        window.location.href = "index.html";
+    });
