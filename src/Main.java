@@ -1,5 +1,2 @@
-class Main{
-    public static void main(String args[]){
-        System.out.println("Poda");
-    }
-}
+a = int(input())
+print(a)

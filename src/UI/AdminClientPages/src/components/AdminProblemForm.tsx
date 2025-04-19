@@ -12,6 +12,7 @@ interface ProblemData {
   description?: string;
   code?: string;
   language?: string;
+  cases?: string;
 }
 
 interface AdminProblemFormProps {
@@ -32,6 +33,7 @@ const AdminProblemForm: React.FC<AdminProblemFormProps> = ({
   const [description, setDescription] = useState(initialData.description || "");
   const [code, setCode] = useState(initialData.code || "// Write sample code here");
   const [language, setLanguage] = useState(initialData.language || "java");
+  const [cases, setCases] = useState(initialData.cases || "");
 
   useEffect(() => {
     if (initialData.id || initialData.title || initialData.description || initialData.code) {
@@ -42,6 +44,7 @@ const AdminProblemForm: React.FC<AdminProblemFormProps> = ({
       setDescription(initialData.description || "");
       setCode(initialData.code || "// Write sample code here");
       setLanguage(initialData.language || "java");
+      setCases(initialData.cases || "");
     }
   }, [initialData]);
 
@@ -55,6 +58,7 @@ const AdminProblemForm: React.FC<AdminProblemFormProps> = ({
       description,
       code,
       language,
+      cases,
     };
     console.log("Submitted Problem Data:", problemData);
     onSubmit(problemData);
@@ -145,6 +149,14 @@ const AdminProblemForm: React.FC<AdminProblemFormProps> = ({
             onChange={(value) => setCode(value || "")}
           />
         </div>
+        <label>Test Cases</label>
+          <textarea
+            className="form-input"
+            value={cases}
+            onChange={(e) => setCases(e.target.value)}
+            rows={5}
+            placeholder={`Example:\nInput: 5\nOutput: 25\n\nInput: 2\nOutput: 4`}
+          />
 
         <button type="submit" className="submit-btn btn btn-success mt-3">
           Submit
