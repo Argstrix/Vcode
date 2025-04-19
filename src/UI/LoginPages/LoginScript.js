@@ -28,76 +28,34 @@ document.addEventListener("DOMContentLoaded", async function () {
         constructor() {
             this.sessionId = this.getSessionId();
         }
-<<<<<<< HEAD
-
 
         // Get session ID from localStorage or create a new one
         getSessionId() {
             let sessionId = localStorage.getItem("sessionId");
-            let sessionId = localStorage.getItem("sessionId");
             if (!sessionId) {
                 console.log("No session ID found in localStorage");
-                console.log("No session ID found in localStorage");
             } else {
-                console.log("Using session ID from localStorage:", sessionId);
                 console.log("Using session ID from localStorage:", sessionId);
             }
             return sessionId;
         }
-
 
         // Save session ID to localStorage
         saveSessionId(sessionId) {
             if (sessionId) {
                 localStorage.setItem("sessionId", sessionId);
                 console.log("Session ID saved to localStorage:", sessionId);
-                localStorage.setItem("sessionId", sessionId);
-                console.log("Session ID saved to localStorage:", sessionId);
                 this.sessionId = sessionId;
             }
         }
-
 
         // Clear session data
         clearSession() {
             localStorage.removeItem("sessionId");
             console.log("Session cleared from localStorage");
-            localStorage.removeItem("sessionId");
-            console.log("Session cleared from localStorage");
             this.sessionId = null;
         }
 
-
-=======
-        
-        // Get session ID from localStorage or create a new one
-        getSessionId() {
-            let sessionId = localStorage.getItem('sessionId');
-            if (!sessionId) {
-                console.log('No session ID found in localStorage');
-            } else {
-                console.log('Using session ID from localStorage:', sessionId);
-            }
-            return sessionId;
-        }
-        
-        // Save session ID to localStorage
-        saveSessionId(sessionId) {
-            if (sessionId) {
-                localStorage.setItem('sessionId', sessionId);
-                console.log('Session ID saved to localStorage:', sessionId);
-                this.sessionId = sessionId;
-            }
-        }
-        
-        // Clear session data
-        clearSession() {
-            localStorage.removeItem('sessionId');
-            console.log('Session cleared from localStorage');
-            this.sessionId = null;
-        }
-        
->>>>>>> fa1dbee40e4a3402fee7b1080a67f45b6df63f8d
         // Check if we have a session
         hasSession() {
             return !!this.sessionId;
@@ -110,105 +68,52 @@ document.addEventListener("DOMContentLoaded", async function () {
             this.baseUrl = API_BASE_URL;
             this.sessionManager = new SessionManager();
         }
-<<<<<<< HEAD
 
-
-=======
-        
->>>>>>> fa1dbee40e4a3402fee7b1080a67f45b6df63f8d
         // Get port from server
         async getPort() {
             try {
                 const response = await fetch(`${this.baseUrl}/get-port`, {
-<<<<<<< HEAD
-                    method: "GET",
-                    credentials: "include", // This ensures cookies are sent
                     method: "GET",
                     credentials: "include", // This ensures cookies are sent
                 });
-
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
-
                 const data = await response.json();
 
-
-=======
-                    method: 'GET',
-                    credentials: 'include' // This ensures cookies are sent
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
->>>>>>> fa1dbee40e4a3402fee7b1080a67f45b6df63f8d
                 // If the response contains a sessionId, save it
                 if (data.sessionId) {
                     this.sessionManager.saveSessionId(data.sessionId);
                 }
-<<<<<<< HEAD
-
 
                 return data.port;
             } catch (error) {
-                console.error("Error getting port:", error);
                 console.error("Error getting port:", error);
                 throw error;
             }
         }
 
-
-=======
-                
-                return data.port;
-            } catch (error) {
-                console.error('Error getting port:', error);
-                throw error;
-            }
-        }
-        
->>>>>>> fa1dbee40e4a3402fee7b1080a67f45b6df63f8d
         // Change context (e.g., switch to admin pages)
         async changeContext(userData) {
             try {
                 console.log("Attempting context change with data:", userData);
                 console.log(this.baseUrl);
                 const response = await fetch(`${this.baseUrl}/change-context`, {
-<<<<<<< HEAD
-                    method: "POST",
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json",
-                        "Content-Type": "application/json",
-=======
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
->>>>>>> fa1dbee40e4a3402fee7b1080a67f45b6df63f8d
                     },
                     body: JSON.stringify({
                         sessionId: this.sessionManager.sessionId,
                         baseURL: userData.baseURL,
                         userEmail: userData.userEmail,
-<<<<<<< HEAD
-                        role: userData.role,
                         role: userData.role,
                     }),
                     credentials: "include", // This ensures cookies are sent
-                    credentials: "include", // This ensures cookies are sent
-=======
-                        role: userData.role
-                    }),
-                    credentials: 'include' // This ensures cookies are sent
->>>>>>> fa1dbee40e4a3402fee7b1080a67f45b6df63f8d
                 });
-                
+
                 if (!response.ok) {
                     const errorText = await response.text();
                     console.error(
@@ -216,27 +121,18 @@ document.addEventListener("DOMContentLoaded", async function () {
                     );
                     throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-                
+
                 const data = await response.json();
-                
+
                 // If the response contains a sessionId, save it
                 if (data.sessionId) {
                     this.sessionManager.saveSessionId(data.sessionId);
                     console.log("Session ID updated:", data.sessionId);
                 }
-<<<<<<< HEAD
-
 
                 return data;
             } catch (error) {
                 console.error("Error changing context:", error);
-                console.error("Error changing context:", error);
-=======
-                
-                return data;
-            } catch (error) {
-                console.error('Error changing context:', error);
->>>>>>> fa1dbee40e4a3402fee7b1080a67f45b6df63f8d
                 throw error;
             }
         }
@@ -247,20 +143,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     const apiClient = new ApiClient();
 
     // Check for cookies and update localStorage if needed
-<<<<<<< HEAD
-    const cookies = document.cookie.split(";");
     const cookies = document.cookie.split(";");
     for (const cookie of cookies) {
         const [name, value] = cookie.trim().split("=");
         if (name === "sessionId") {
-        const [name, value] = cookie.trim().split("=");
-        if (name === "sessionId") {
-=======
-    const cookies = document.cookie.split(';');
-    for (const cookie of cookies) {
-        const [name, value] = cookie.trim().split('=');
-        if (name === 'sessionId') {
->>>>>>> fa1dbee40e4a3402fee7b1080a67f45b6df63f8d
             sessionManager.saveSessionId(value);
             break;
         }
@@ -404,7 +290,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                     const backendURL = `http://localhost:${port}`;
                     console.log("Using backend port:", backendURL);
-                    
+
                     // Step 2: Store role
                     await fetch(backendURL + "/store-role", {
                         method: "POST",
@@ -416,34 +302,38 @@ document.addEventListener("DOMContentLoaded", async function () {
                         }),
                         credentials: "include",
                     });
-                    
+
                     // Step 3: Save data in localStorage
                     localStorage.setItem("userEmail", userEmail);
                     localStorage.setItem("userRole", role);
                     localStorage.setItem("userPort", port);
-                    
+
                     // Step 4: Change context using the session-aware client
-                    await apiClient.changeContext({
-                        baseURL: backendURL,
-                        userEmail: userEmail,
-                        role: role
-                    })
-                    .then((res) => {
-                        // Navigate to the new app manually (React side)
-                        console.log("Context changed successfully");
-                        window.location.href = "http://localhost:9000/";
-                    })
-                    .catch((err) => {
-                        console.error("Context change failed", err);
-                        printLine("> ERROR: Failed to change context.");
-                    });
-                    
+                    await apiClient
+                        .changeContext({
+                            baseURL: backendURL,
+                            userEmail: userEmail,
+                            role: role,
+                        })
+                        .then((res) => {
+                            // Navigate to the new app manually (React side)
+                            console.log("Context changed successfully");
+                            window.location.href = "http://localhost:9000/";
+                        })
+                        .catch((err) => {
+                            console.error("Context change failed", err);
+                            printLine("> ERROR: Failed to change context.");
+                        });
+
                     printLine("> Session data saved locally.");
                 } catch (error) {
-                    console.error("Error during session initialization:", error);
+                    console.error(
+                        "Error during session initialization:",
+                        error
+                    );
                     printLine("> ERROR: Failed to initialize session.");
                 }
-                
+
                 setTimeout(() => {
                     printLine("> Connection Established.");
                 }, 1000);
@@ -455,7 +345,9 @@ document.addEventListener("DOMContentLoaded", async function () {
             console.error("Firebase Auth Error:", error);
             terminalInput.dataset.passwordMode = "true";
             if (wrongPass > 2) {
-                printLine("> Forgot password? Type 'forgot --help' for assistance.");
+                printLine(
+                    "> Forgot password? Type 'forgot --help' for assistance."
+                );
             }
         }
     }
