@@ -102,7 +102,7 @@ class ClientHandler implements Runnable {
                     // Build JSON response payload
                     Map<String, Object> responseBody = new HashMap<>();
                     String serverIp = clientSocket.getLocalAddress().getHostAddress();
-                    responseBody.put("redirect", "http://" + "localhost" + ":9001/");
+                    //responseBody.put("redirect", "http://" + "localhost" + ":9001/");
                     responseBody.put("setCookies", new String[] {
                             "userEmail=" + URLEncoder.encode(email, "UTF-8") + "; Path=/; HttpOnly",
                             "userRole=" + URLEncoder.encode(role, "UTF-8") + "; Path=/; HttpOnly",
