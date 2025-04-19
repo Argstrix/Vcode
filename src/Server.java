@@ -209,8 +209,7 @@ class ClientHandler implements Runnable {
                         e.printStackTrace();
                         sendJsonResponse(out, 500, Map.of("error", "Exception while adding question"));
                     }
-                }else {
-                } else if (method.equals("POST") && path.equals("/addQuestion")) {
+                }else if (method.equals("POST") && path.equals("/addQuestion")) {
                     try {
                         System.out.println("Received /addQuestion request with body: " + requestBody);
                         JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
