@@ -140,7 +140,7 @@ class ClientHandler implements Runnable {
                                 try (FileWriter writer = new FileWriter(filePath)) {
                                     writer.write(code);
                                 }
-                                handleCodeSubmissionAndCheck(filePath, problemId, out);
+                                handleCodeSubmissionAndCheck(code, problemId, out);
                             }
                 
                             case "python" -> {
