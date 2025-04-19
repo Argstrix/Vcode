@@ -21,7 +21,6 @@ function App() {
     return (
         <Router>
             <Routes>
-                {/* isAdmin() */}
                 {isAdmin() ? (
                     <Route path="/" element={<AdminLayout />}>
                         <Route index element={<Dashboard />} />
@@ -36,10 +35,7 @@ function App() {
                         />
                         <Route path="analytics" element={<ManageProblem />} />
                         <Route path="settings" element={<ManageProblem />} />
-                        <Route
-                            path="/editProblem/:id"
-                            element={<EditProblem />}
-                        />
+                        <Route path="/editProblem/:id" element={<EditProblem />} />
                         <Route path="add-problem" element={<AddProblem />} />
                     </Route>
                 ) : isStudent() ? (
@@ -60,10 +56,7 @@ function App() {
                     </Route>
                 ) : (
                     // fallback if role is invalid
-                    <Route
-                        path="*"
-                        element={<div>Unauthorized or unknown role</div>}
-                    />
+                    <Route path="*" element={<div>Unauthorized or unknown role</div>} />
                 )}
             </Routes>
         </Router>
@@ -71,3 +64,4 @@ function App() {
 }
 
 export default App;
+        

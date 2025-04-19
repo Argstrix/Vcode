@@ -33,7 +33,8 @@ public class Server {
 
 class ClientHandler implements Runnable {
     private final Socket clientSocket;
-    private static final String SOURCE_FILE = "Main.java";
+    private static final String SOURCE_FILE1 = "Main.java";
+    private static final String SOURCE_FILE2 = "main.py";
 
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
@@ -119,22 +120,46 @@ class ClientHandler implements Runnable {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
                     String code = jsonObject.get("code").getAsString();
                     String problemId = jsonObject.get("problemId").getAsString();
-
+                    String language = jsonObject.get("language").getAsString().toLowerCase();
+                
                     String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
                     String clientIP = clientSocket.getInetAddress().getHostAddress();
-
+                
                     // Save the submission
                     Map<String, String> submission = new HashMap<>();
                     submission.put("code", code);
                     submission.put("timestamp", timestamp);
                     submission.put("ip", clientIP);
+                    submission.put("language", language);
                     pushSubmissionToFirebase(submission);
-
-                    handleCodeSubmissionAndCheck(code, problemId, out);
-
-                    // Return results to frontend
-
-                } else if (method.equals("DELETE") && path.equals("/clearSingleSubmissions")) {
+                
+                    try {
+                        switch (language) {
+                            case "java" -> {
+                                String filePath = "Main.java";
+                                try (FileWriter writer = new FileWriter(filePath)) {
+                                    writer.write(code);
+                                }
+                                handleCodeSubmissionAndCheck(filePath, problemId, out);
+                            }
+                
+                            case "python" -> {
+                                String filePath = "main.py";
+                                try (FileWriter writer = new FileWriter(filePath)) {
+                                    writer.write(code);
+                                }
+                                handlePythonSubmissionAndCheck(filePath, problemId, out);
+                            }
+                
+                            default -> {
+                                sendJsonResponse(out, 400, Map.of("error", "Unsupported language: " + language));
+                            }
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        sendJsonResponse(out, 500, Map.of("error", "Server error: " + e.getMessage()));
+                    }
+                }else if (method.equals("DELETE") && path.equals("/clearSingleSubmissions")) {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
                     String timestamp = jsonObject.get("timestamp").getAsString();
                     deleteSingleSubmissionFromFirebase(timestamp);
@@ -166,51 +191,46 @@ class ClientHandler implements Runnable {
                 } else if (method.equals("POST") && path.equals("/compile")) {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
                     String code = jsonObject.get("code").getAsString();
+                    String language = jsonObject.get("language").getAsString().toLowerCase();
+                
                     JsonElement testInputElement = jsonObject.get("testInput");
                     String testInput = (testInputElement != null && !testInputElement.isJsonNull())
                             ? testInputElement.getAsString()
                             : "";
-
-                    try (FileWriter writer = new FileWriter(SOURCE_FILE)) {
-                        writer.write(code);
-                    }
-
-                    String output = JavaFileCompiler.compileAndRun(SOURCE_FILE, testInput);
-                    System.out.println(output);
-                    sendJsonResponse(out, 200, Map.of("output", output));
-                } else if (method.equals("POST") && path.equals("/addQuestion")) {
+                
+                    String output = "";
+                
                     try {
-                        System.out.println("Received /addQuestion request with body: " + requestBody);
-                        JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
+                        switch (language) {
+                            case "java" -> {
+                                String javaFile = "Main.java";
+                                try (FileWriter writer = new FileWriter(javaFile)) {
+                                    writer.write(code);
+                                }
+                                output = JavaFileCompiler.compileAndRun(javaFile, testInput);
+                            }
                 
-                        Map<String, Object> question = new HashMap<>();
-                        question.put("id", jsonObject.get("id").getAsInt());
-                        question.put("title", jsonObject.get("title").getAsString());
-                        question.put("difficulty", jsonObject.get("diff").getAsString());
-                        question.put("description", jsonObject.get("desc").getAsString());
+                            case "python" -> {
+                                String pythonFile = "main.py";
+                                try (FileWriter writer = new FileWriter(pythonFile)) {
+                                    writer.write(code);
+                                }
+                                output = PythonCompilerRunner.run(pythonFile, testInput);
+                            }
                 
-                        List<String> tags = new ArrayList<>();
-                        JsonArray tagsArray = jsonObject.get("tags").getAsJsonArray();
-                        for (JsonElement element : tagsArray) {
-                            tags.add(element.getAsString());
+                            default -> {
+                                output = "Unsupported language: " + language;
+                            }
                         }
-                        question.put("tags", tags);
                 
-                        System.out.println("Parsed question: " + question);
+                        System.out.println(output);
+                        sendJsonResponse(out, 200, Map.of("output", output));
                 
-                        boolean success = addQuestionToFirebase(question);
-                        if (success) {
-                            sendJsonResponse(out, 200, Map.of("message", "Question added successfully"));
-                        } else {
-                            System.err.println("Failed to add question in addQuestionToFirebase()");
-                            sendJsonResponse(out, 500, Map.of("error", "Failed to add question"));
-                        }
-                    } catch (Exception e) {
+                    } catch (IOException | InterruptedException e) {
                         e.printStackTrace();
-                        sendJsonResponse(out, 500, Map.of("error", "Exception while adding question"));
+                        sendJsonResponse(out, 500, Map.of("error", "Server error: " + e.getMessage()));
                     }
-                }
-                else if (method.equals("POST") && path.equals("/addQuestion")) {
+                }else if (method.equals("POST") && path.equals("/addQuestion")) {
                     try {
                         System.out.println("Received /addQuestion request with body: " + requestBody);
                         JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
@@ -218,9 +238,12 @@ class ClientHandler implements Runnable {
                         Map<String, Object> question = new HashMap<>();
                         question.put("id", jsonObject.get("id").getAsInt());
                         question.put("title", jsonObject.get("title").getAsString());
-                        question.put("difficulty", jsonObject.get("diff").getAsString());
-                        question.put("description", jsonObject.get("desc").getAsString());
-                
+                        question.put("diff", jsonObject.get("diff").getAsString());
+                        question.put("desc", jsonObject.get("desc").getAsString());
+                        question.put("code", jsonObject.get("code").getAsString());
+                        question.put("desc", jsonObject.get("desc").getAsString());
+                        question.put("cases", jsonObject.get("cases").getAsString());
+                        
                         List<String> tags = new ArrayList<>();
                         JsonArray tagsArray = jsonObject.get("tags").getAsJsonArray();
                         for (JsonElement element : tagsArray) {
@@ -330,7 +353,7 @@ class ClientHandler implements Runnable {
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json; utf-8");
             conn.setDoOutput(true);
-    
+            System.out.print(questionData);
             String jsonInput = new Gson().toJson(questionData);
             try (OutputStream os = conn.getOutputStream()) {
                 byte[] input = jsonInput.getBytes("utf-8");
@@ -350,8 +373,6 @@ class ClientHandler implements Runnable {
         return false;
     }
     
-    
-
 
     private void pushSubmissionToFirebase(Map<String, String> submission) {
         try {
@@ -606,6 +627,68 @@ class ClientHandler implements Runnable {
             e.printStackTrace();
         }
     }
+
+    private void handlePythonSubmissionAndCheck(String code, String problemId, BufferedWriter out) {
+        final String SOURCE_FILE = "main.py";
+    
+        Map<String, Object> question = getQuestionByIdFromFirebase(problemId);
+        if (question == null || !question.containsKey("cases") || !question.containsKey("code")) {
+            try {
+                sendJsonResponse(out, 404, Map.of("message", "Problem not found or incomplete."));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+    
+        List<String> testCases = (List<String>) question.get("cases");
+        System.out.println(testCases);
+        String expectedCode = question.get("code").toString();
+    
+        int passed = 0;
+        StringBuilder resultBuilder = new StringBuilder();
+    
+        for (int i = 0; i < testCases.size(); i++) {
+            String input = testCases.get(i);
+            String testCaseNumber = String.valueOf(i + 1);
+    
+            try {
+                // Step 1: Run expected Python code
+                writeToFile(SOURCE_FILE, expectedCode);
+                String expectedOutput = JavaFileCompiler.compileAndRun("Main.java", input).trim();
+    
+                // Step 2: Run submitted Python code
+                writeToFile(SOURCE_FILE, code);
+                String actualOutput = PythonCompilerRunner.run(SOURCE_FILE, input).trim();
+    
+                // Step 3: Compare outputs
+                if (expectedOutput.equals(actualOutput)) {
+                    passed++;
+                    resultBuilder.append("Test ").append(testCaseNumber).append(": Success\n");
+                } else {
+                    resultBuilder.append("Test ").append(testCaseNumber)
+                            .append(": Failed (Expected: ")
+                            .append(expectedOutput).append(", Got: ")
+                            .append(actualOutput).append(")\n");
+                }
+            } catch (Exception e) {
+                resultBuilder.append("Test ").append(testCaseNumber)
+                        .append(": Error executing code - ")
+                        .append(e.getMessage()).append("\n");
+            }
+        }
+    
+        String summary = "Passed " + passed + "/" + testCases.size() + " test cases.\n\n";
+        resultBuilder.insert(0, summary);
+    
+        try {
+            sendJsonResponse(out, 200, Map.of("result", resultBuilder.toString()));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    
+    
     
 
     private void writeToFile(String filename, String content) throws IOException {

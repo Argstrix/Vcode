@@ -18,6 +18,7 @@ const AddProblem = () => {
                 .map((tag: string) => tag.trim())
                 .filter((tag: string) => tag.length > 0),
             code: formData.code,
+            cases: formData.cases
         };
 
         console.log("📤 Submitted Problem Data:", payload);
@@ -54,6 +55,7 @@ const AddProblem = () => {
                 tags: "",
                 description: "",
                 code: "",
+                cases: "",
             }}
             onSubmit={handleAddSubmit}
         />
