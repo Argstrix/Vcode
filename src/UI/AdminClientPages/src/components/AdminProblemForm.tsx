@@ -54,7 +54,7 @@ const AdminProblemForm: React.FC<AdminProblemFormProps> = ({
       id,
       title,
       difficulty,
-      tags: tags.trim(),
+      tags,
       description,
       code,
       language,

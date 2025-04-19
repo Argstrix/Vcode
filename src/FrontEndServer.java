@@ -1,3 +1,4 @@
+
 import java.io.*;
 import java.net.*;
 import java.nio.file.Files;
@@ -66,6 +67,13 @@ public class FrontEndServer {
 
             System.out.println("Received Request: " + request);
             
+            // Handle OPTIONS preflight request for CORS
+            if (request.startsWith("OPTIONS")) {
+                handlePreflightRequest(out);
+                return;
+            }
+
+           
             // Extract session ID from cookies
             String sessionId = null;
             String line;
@@ -91,6 +99,12 @@ public class FrontEndServer {
             // Get the base directory for this session
             String currentBaseDir = sessionBaseDirs.getOrDefault(sessionId, BASE_DIR);
             System.out.println("Current Base Directory: " + currentBaseDir);
+
+             // Handle logout request before session creation
+            if (request.startsWith("POST /logout") || request.startsWith("GET /logout")) {
+                handleLogout(out, sessionId);
+                return;
+            }
 
             if (request.startsWith("GET /get-port")) {
                 handleApiRequest(out, sessionId, isNewSession);
@@ -209,6 +223,43 @@ public class FrontEndServer {
         out.flush();
     }
 
+    private static void handleLogout(OutputStream out, String sessionId) throws IOException {
+        System.out.println("Logout requested for session: " + sessionId);
+        
+        // Remove session from server-side storage
+        if (sessionId != null) {
+            sessionBaseDirs.remove(sessionId);
+            System.out.println("Session invalidated: " + sessionId);
+        }
+        
+        // Prepare response with cookie clearing
+        StringBuilder responseBuilder = new StringBuilder();
+        responseBuilder.append("HTTP/1.1 200 OK\r\n");
+        responseBuilder.append("Content-Type: application/json\r\n");
+        
+        // Set expired cookie to remove it from browser
+        responseBuilder.append("Set-Cookie: sessionId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Lax\r\n");
+        
+        // Add Clear-Site-Data header to clear browser storage
+        responseBuilder.append("Clear-Site-Data: \"cookies\", \"storage\"\r\n");
+        
+        // Since both frontend and backend are on the same origin, we don't need specific CORS headers
+        // But we'll keep them for consistency with the rest of your code
+        responseBuilder.append("Access-Control-Allow-Origin: http://localhost:9000\r\n");
+        responseBuilder.append("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n");
+        responseBuilder.append("Access-Control-Allow-Headers: Content-Type\r\n");
+        
+        // Add content length for the response body
+        String responseBody = "{ \"message\": \"Logged out successfully\" }";
+        responseBuilder.append("Content-Length: ").append(responseBody.getBytes().length).append("\r\n");
+        responseBuilder.append("\r\n");
+        responseBuilder.append(responseBody);
+        
+        out.write(responseBuilder.toString().getBytes());
+        out.flush();
+    }
+    
+
     private static void handlePreflightRequest(OutputStream out) throws IOException {
         String preflightResponse = "HTTP/1.1 204 No Content\r\n"
                                 + "Access-Control-Allow-Origin: *\r\n"
@@ -219,6 +270,19 @@ public class FrontEndServer {
         out.write(preflightResponse.getBytes());
         out.flush();
     }
+
+    // private static void handlePreflightRequest (OutputStream out) throws IOException {
+    //     String preflightResponse = "HTTP/1.1 204 No Content\r\n"
+    //                             + "Access-Control-Allow-Origin: http://localhost:9000\r\n"
+    //                             + "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
+    //                             + "Access-Control-Allow-Headers: Content-Type\r\n"
+    //                             + "Access-Control-Allow-Credentials: true\r\n"
+    //                             + "Access-Control-Max-Age: 86400\r\n"
+    //                             + "\r\n";
+    //     out.write(preflightResponse.getBytes());
+    //     out.flush();
+    // }
+    
 
     private static void send404(OutputStream out) throws IOException {
         String response = "HTTP/1.1 404 Not Found\r\n"
@@ -262,3 +326,4 @@ public class FrontEndServer {
         return "application/octet-stream";
     }
 }
+

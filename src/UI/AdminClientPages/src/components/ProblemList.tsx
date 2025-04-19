@@ -1,38 +1,81 @@
 import { Link, useNavigate } from "react-router-dom";
 import "../../../node_modules/bootstrap/dist/css/bootstrap.css";
 import "../styles/ProblemList.css";
+import { useEffect, useState } from "react";
+
+interface Problem {
+    id: string;
+    title: string;
+    difficulty: string;
+    tags: string[];
+}
 
 const ProblemList = () => {
     const navigate = useNavigate();
+    const [problems, setProblems] = useState<Problem[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    const problems = [
-        {
-            id: 1,
-            title: "Two Sum",
-            difficulty: "Easy",
-            tags: ["Array", "HashMap"],
-        },
-        {
-            id: 2,
-            title: "Binary Tree Inorder Traversal",
-            difficulty: "Medium",
-            tags: ["Tree", "DFS"],
-        },
-        {
-            id: 3,
-            title: "Dijkstra's Algorithm",
-            difficulty: "Hard",
-            tags: ["Graph", "Shortest Path"],
-        },
-    ];
-
-    const handleEditClick = (problemId: number) => {
+    const handleEditClick = (problemId: string) => {
         navigate(`/editProblem/${problemId}`);
     };
 
     const handleAddProblemClick = () => {
         navigate("/add-problem");
     };
+    const fetchProblems = async () => {
+        try {
+            const response = await fetch("http://localhost:8080/question");
+            if (response.ok) {
+                const data = await response.json();
+                setProblems(data);
+            }
+        } catch (error) {
+            console.error("Error fetching problems:", error);
+        }
+    };
+    
+    const handleDeleteClick = async (problemId: string) => {
+        const confirmDelete = window.confirm("Are you sure you want to delete this problem?");
+        if (!confirmDelete) return;
+    
+        try {
+            const response = await fetch(`http://localhost:8080/clearSingleSubmission/${problemId}`, {
+                method: "DELETE",
+            });
+    
+            if (response.ok) {
+                alert("🗑️ Problem deleted successfully!");
+                fetchProblems(); // Refresh the list
+            } else {
+                const errText = await response.text();
+                console.error("Server Error:", errText);
+                alert("❌ Failed to delete the problem.");
+            }
+        } catch (error) {
+            console.error("⚠️ Delete failed:", error);
+            alert("⚠️ Could not connect to the server.");
+        }
+    };
+    
+    
+
+    useEffect(() => {
+        fetch("http://localhost:8080/question") // Replace PORT with your backend server's port
+            .then((response) => {
+                if (!response.ok) {
+                    throw new Error("Failed to fetch problems");
+                }
+                return response.json();
+            })
+            .then((data) => {
+                setProblems(data);
+                setLoading(false);
+            })
+            .catch((error) => {
+                console.error("Error fetching problems:", error);
+                setLoading(false);
+            });
+    }, []);
 
     return (
         <div className="overflow-auto">
@@ -47,46 +90,55 @@ const ProblemList = () => {
                 />
             </div>
 
-            {/* ✅ Add Problem Button */}
             <div className="mb-4">
-                <button
-                    className="btn btn-success"
-                    onClick={handleAddProblemClick}
-                >
+                <button className="btn btn-success" onClick={handleAddProblemClick}>
                     ➕ Add New Problem
                 </button>
             </div>
 
-            <ul className="list-group">
-                {problems.map((problem) => (
-                    <li key={problem.id}>
-                        <Link to={`/manageProblem`} className="pli">
-                            <div className="problem-content">
-                                <strong>{problem.title}</strong>
-                                <div className="difficulty">
-                                    Difficulty: {problem.difficulty}
+            {loading ? (
+                <p>Loading problems...</p>
+            ) : (
+                <ul className="list-group">
+                    {problems.map((problem) => (
+                        <li key={problem.id}>
+                            <Link to={"/question/"+problem.id} className="pli">
+                                <div className="problem-content">
+                                    <strong>{problem.title}</strong>
+                                    <div className="difficulty">
+                                        Difficulty: {problem.difficulty}
+                                    </div>
+                                    <div className="tags">
+                                        {problem.tags.map((tag, index) => (
+                                            <span key={index} className="tag">
+                                                {tag}
+                                            </span>
+                                        ))}
+                                    </div>
                                 </div>
-                                <div className="tags">
-                                    {problem.tags.map((tag, index) => (
-                                        <span key={index} className="tag">
-                                            {tag}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                            <button
-                                className="settings-btn"
-                                onClick={(e) => {
-                                    e.preventDefault(); // Prevent Link navigation
-                                    handleEditClick(problem.id);
-                                }}
-                            >
-                                ⚙️
-                            </button>
-                        </Link>
-                    </li>
-                ))}
-            </ul>
+                                <button
+                                    className="settings-btn"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleEditClick(problem.id);
+                                    }}
+                                >
+                                    ⚙️
+                                </button>
+                                <button
+                                    className="delete-btn"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        handleDeleteClick(problem.id);
+                                    }}
+                                >
+                                    🗑️
+                                </button>
+                            </Link>
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     );
 };
