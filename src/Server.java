@@ -4,7 +4,6 @@ import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-
 import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import javax.lang.model.util.Elements;
@@ -16,8 +15,8 @@ public class Server {
             "https://admin-panel.yourdomain.com", // Admin panel
             "http://localhost:9000", // Local development frontend
             "http://127.0.0.1:9000",
-            "http://localhost:5173", // Alternative local address
-            "http://localhost:9001");
+            "http://localhost:5173" // Alternative local address
+            );
 
     public static void main(String[] args) throws IOException {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : 8080;

@@ -16,7 +16,7 @@ public class FrontEndServer {
     };
     private static int currentServerIndex = 0;
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(15);
-    private static final String BASE_DIR = ".\\UI\\LoginPages";
+    private static final String BASE_DIR = "./UI/LoginPages";
     
     // Change from Socket to session ID as key
     private static ConcurrentHashMap<String, String> sessionBaseDirs = new ConcurrentHashMap<>();
@@ -63,7 +63,7 @@ public class FrontEndServer {
                 apiClient.close();
                 return;
             }
-
+    
             System.out.println("Received Request: " + request);
             
             // Handle OPTIONS preflight request for CORS
@@ -77,13 +77,23 @@ public class FrontEndServer {
             String sessionId = null;
             String line;
             boolean isNewSession = false;
+            String origin = null;
             
             // Read all headers
             while ((line = in.readLine()) != null && !line.isEmpty()) {
                 if (line.startsWith("Cookie:")) {
                     sessionId = extractSessionId(line);
-                    break;
+                    System.out.println(sessionId);
+                } else if (line.startsWith("Origin:")) {
+                    origin = line.substring("Origin:".length()).trim();
+                    System.out.println(origin);
                 }
+            }
+            
+            // Handle OPTIONS preflight requests for CORS
+            if (request.startsWith("OPTIONS")) {
+                handlePreflightRequest(out, origin);
+                return;
             }
             
             // Create new session if needed
@@ -113,20 +123,21 @@ public class FrontEndServer {
                 String filePath = request.split(" ")[1].substring(1);
                 if (filePath.isEmpty()) filePath = "index.html";
                 serveStaticFile(filePath, out, currentBaseDir, sessionId, isNewSession);
-            } else if (request.startsWith("OPTIONS")) {
-                handlePreflightRequest(out);
+            } else if (request.startsWith("POST /logout") || request.startsWith("GET /logout")) {
+                handleLogout(out, sessionId);
             } else if (request.startsWith("POST /change-context")) {
+                System.out.println("Context Switch Requested");
                 handleChangeContext(in, out, sessionId);
             } else {
                 send404(out);
             }
-
+    
             apiClient.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
+    
     private static void handleApiRequest(OutputStream out, String sessionId, boolean isNewSession) throws IOException {
         String server = getNextServer();
         String port = server.split(":")[1];
@@ -187,11 +198,14 @@ public class FrontEndServer {
         StringBuilder bodyBuilder = new StringBuilder();
         String line;
         int contentLength = 0;
+        String origin = "http://localhost:9000";
         
-        // Read headers to find content length
+        // Read headers to find content length and origin
         while ((line = in.readLine()) != null && !line.isEmpty()) {
             if (line.startsWith("Content-Length:")) {
                 contentLength = Integer.parseInt(line.substring("Content-Length:".length()).trim());
+            } else if (line.startsWith("Origin:")) {
+                origin = line.substring("Origin:".length()).trim();
             }
         }
         
@@ -204,21 +218,93 @@ public class FrontEndServer {
         System.out.println("Received context switch request: " + body);
         
         // Change base directory for this specific session
-        sessionBaseDirs.put(sessionId, ".\\UI\\AdminClientPages\\dist\\");
-        
+        sessionBaseDirs.put(sessionId, "./UI/AdminClientPages/dist/");
+        System.out.println("Directory maathiten da");
         // Debugging log to verify directory change
         System.out.println("Updated Base Directory for session " + sessionId + ": " + sessionBaseDirs.get(sessionId));
         
-        String response = "HTTP/1.1 200 OK\r\n"
-                        + "Content-Type: application/json\r\n"
-                        + "Set-Cookie: sessionId=" + sessionId + "; Path=/; HttpOnly; SameSite=Strict\r\n"
-                        + "Access-Control-Allow-Origin: *\r\n"
-                        + "Access-Control-Allow-Methods: POST, OPTIONS\r\n"
-                        + "Access-Control-Allow-Headers: Content-Type\r\n"
-                        + "\r\n"
-                        + "{ \"message\": \"Context switched to AdminClientPages\", \"sessionId\": \"" + sessionId + "\" }";
+        // Create the response body
+        String responseBody = "{ \"message\": \"Context switched to AdminClientPages\", \"sessionId\": \"" + sessionId + "\" }";
         
-        out.write(response.getBytes());
+        // Build the response with proper headers
+        StringBuilder responseBuilder = new StringBuilder();
+        responseBuilder.append("HTTP/1.1 200 OK\r\n");
+        responseBuilder.append("Content-Type: application/json\r\n");
+        responseBuilder.append("Content-Length: ").append(responseBody.getBytes().length).append("\r\n");
+        responseBuilder.append("Set-Cookie: sessionId=").append(sessionId).append("; Path=/; HttpOnly; SameSite=Strict\r\n");
+        
+        // Use specific origin instead of wildcard for CORS when using credentials
+        if (origin != null) {
+            responseBuilder.append("Access-Control-Allow-Origin: ").append(origin).append("\r\n");
+        } else {
+            // Fallback, but this won't work with credentials in modern browsers
+            responseBuilder.append("Access-Control-Allow-Origin: *\r\n");
+        }
+        
+        responseBuilder.append("Access-Control-Allow-Credentials: true\r\n");
+        responseBuilder.append("Access-Control-Allow-Methods: POST, OPTIONS\r\n");
+        responseBuilder.append("Access-Control-Allow-Headers: Content-Type\r\n");
+        responseBuilder.append("\r\n");
+        responseBuilder.append(responseBody);
+        
+        out.write(responseBuilder.toString().getBytes());
+        out.flush();
+    }
+    
+
+    // private static void handleLogout(OutputStream out, String sessionId) throws IOException {
+    //     // Remove session from server-side storage
+    //     sessionBaseDirs.remove(sessionId);
+        
+    //     System.out.println("Session invalidated: " + sessionId);
+        
+    //     // Prepare response with cookie clearing
+    //     StringBuilder responseBuilder = new StringBuilder();
+    //     responseBuilder.append("HTTP/1.1 200 OK\r\n");
+    //     responseBuilder.append("Content-Type: application/json\r\n");
+        
+    //     // Set expired cookie to remove it from browser
+    //     responseBuilder.append("Set-Cookie: sessionId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict\r\n");
+        
+    //     // Add Clear-Site-Data header to clear browser storage
+    //     responseBuilder.append("Clear-Site-Data: \"cookies\", \"storage\"\r\n");
+        
+    //     responseBuilder.append("Access-Control-Allow-Origin: *\r\n");
+    //     responseBuilder.append("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n");
+    //     responseBuilder.append("Access-Control-Allow-Headers: Content-Type\r\n");
+    //     responseBuilder.append("Connection: keep-alive\r\n");
+    //     responseBuilder.append("\r\n");
+    //     responseBuilder.append("{ \"message\": \"Logged out successfully\" }");
+        
+    //     out.write(responseBuilder.toString().getBytes());
+    //     out.flush();
+    // }
+    
+    private static void handleLogout(OutputStream out, String sessionId) throws IOException {
+        // Remove session from server-side storage
+        sessionBaseDirs.remove(sessionId);
+        
+        System.out.println("Session invalidated: " + sessionId);
+        
+        // Prepare response with cookie clearing and proper CORS headers
+        StringBuilder responseBuilder = new StringBuilder();
+        responseBuilder.append("HTTP/1.1 200 OK\r\n");
+        responseBuilder.append("Content-Type: application/json\r\n");
+        
+        // CORS headers - allow localhost:9000
+        responseBuilder.append("Access-Control-Allow-Origin: http://localhost:9000\r\n");
+        responseBuilder.append("Access-Control-Allow-Credentials: true\r\n");
+        responseBuilder.append("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n");
+        responseBuilder.append("Access-Control-Allow-Headers: Content-Type\r\n");
+        
+        // Set expired cookie to remove it from browser
+        responseBuilder.append("Set-Cookie: sessionId=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; HttpOnly; SameSite=Strict\r\n");
+        
+        responseBuilder.append("Content-Length: 35\r\n");
+        responseBuilder.append("\r\n");
+        responseBuilder.append("{ \"message\": \"Logged out successfully\" }");
+        
+        out.write(responseBuilder.toString().getBytes());
         out.flush();
     }
 
@@ -261,10 +347,11 @@ public class FrontEndServer {
 
     private static void handlePreflightRequest(OutputStream out) throws IOException {
         String preflightResponse = "HTTP/1.1 204 No Content\r\n"
-                                + "Access-Control-Allow-Origin: *\r\n"
+                                + "Access-Control-Allow-Origin: " + (origin != null ? origin : "http://localhost:9000") + "\r\n"
                                 + "Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n"
-                                + "Access-Control-Allow-Headers: Content-Type\r\n"
-                                + "Connection: keep-alive\r\n"
+                                + "Access-Control-Allow-Headers: Content-Type, Authorization\r\n"
+                                + "Access-Control-Allow-Credentials: true\r\n"
+                                + "Access-Control-Max-Age: 86400\r\n"
                                 + "\r\n";
         out.write(preflightResponse.getBytes());
         out.flush();

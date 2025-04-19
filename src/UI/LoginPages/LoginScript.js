@@ -29,32 +29,43 @@ document.addEventListener("DOMContentLoaded", async function () {
             this.sessionId = this.getSessionId();
         }
 
+
         // Get session ID from localStorage or create a new one
         getSessionId() {
             let sessionId = localStorage.getItem("sessionId");
+            let sessionId = localStorage.getItem("sessionId");
             if (!sessionId) {
                 console.log("No session ID found in localStorage");
+                console.log("No session ID found in localStorage");
             } else {
+                console.log("Using session ID from localStorage:", sessionId);
                 console.log("Using session ID from localStorage:", sessionId);
             }
             return sessionId;
         }
+
 
         // Save session ID to localStorage
         saveSessionId(sessionId) {
             if (sessionId) {
                 localStorage.setItem("sessionId", sessionId);
                 console.log("Session ID saved to localStorage:", sessionId);
+                localStorage.setItem("sessionId", sessionId);
+                console.log("Session ID saved to localStorage:", sessionId);
                 this.sessionId = sessionId;
             }
         }
+
 
         // Clear session data
         clearSession() {
             localStorage.removeItem("sessionId");
             console.log("Session cleared from localStorage");
+            localStorage.removeItem("sessionId");
+            console.log("Session cleared from localStorage");
             this.sessionId = null;
         }
+
 
         // Check if we have a session
         hasSession() {
@@ -69,38 +80,51 @@ document.addEventListener("DOMContentLoaded", async function () {
             this.sessionManager = new SessionManager();
         }
 
+
         // Get port from server
         async getPort() {
             try {
                 const response = await fetch(`${this.baseUrl}/get-port`, {
                     method: "GET",
                     credentials: "include", // This ensures cookies are sent
+                    method: "GET",
+                    credentials: "include", // This ensures cookies are sent
                 });
+
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
 
+
                 const data = await response.json();
+
 
                 // If the response contains a sessionId, save it
                 if (data.sessionId) {
                     this.sessionManager.saveSessionId(data.sessionId);
                 }
 
+
                 return data.port;
             } catch (error) {
+                console.error("Error getting port:", error);
                 console.error("Error getting port:", error);
                 throw error;
             }
         }
 
+
         // Change context (e.g., switch to admin pages)
         async changeContext(userData) {
             try {
+                console.log("Attempting context change with data:", userData);
+                console.log(this.baseUrl);
                 const response = await fetch(`${this.baseUrl}/change-context`, {
                     method: "POST",
+                    method: "POST",
                     headers: {
+                        "Content-Type": "application/json",
                         "Content-Type": "application/json",
                     },
                     body: JSON.stringify({
@@ -108,12 +132,18 @@ document.addEventListener("DOMContentLoaded", async function () {
                         baseURL: userData.baseURL,
                         userEmail: userData.userEmail,
                         role: userData.role,
+                        role: userData.role,
                     }),
+                    credentials: "include", // This ensures cookies are sent
                     credentials: "include", // This ensures cookies are sent
                 });
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    console.error(
+                        `Server returned ${response.status}: ${errorText}`
+                    );
+                    throw new Error(`HTTP error! Status: ${response.status}`);
                 }
 
                 const data = await response.json();
@@ -121,10 +151,13 @@ document.addEventListener("DOMContentLoaded", async function () {
                 // If the response contains a sessionId, save it
                 if (data.sessionId) {
                     this.sessionManager.saveSessionId(data.sessionId);
+                    console.log("Session ID updated:", data.sessionId);
                 }
+
 
                 return data;
             } catch (error) {
+                console.error("Error changing context:", error);
                 console.error("Error changing context:", error);
                 throw error;
             }
@@ -137,7 +170,10 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     // Check for cookies and update localStorage if needed
     const cookies = document.cookie.split(";");
+    const cookies = document.cookie.split(";");
     for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split("=");
+        if (name === "sessionId") {
         const [name, value] = cookie.trim().split("=");
         if (name === "sessionId") {
             sessionManager.saveSessionId(value);
@@ -273,13 +309,19 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     async function verifyPassword(userEmail, inputPassword, role, username) {
         try {
+            // Step 1: Authenticate with Firebase
             await auth.signInWithEmailAndPassword(userEmail, inputPassword);
             printLine("> Access granted. Welcome, " + username + "!");
             setTimeout(async () => {
-                printLine("> Initializing secure session...");
                 try {
-                    // Step 1: Get backend port using the session-aware client
+                    printLine("> Initializing secure session...");
+
+                    // Step 3: Get backend port
                     const port = await apiClient.getPort();
+                    if (!port) {
+                        throw new Error("Failed to get backend port");
+                    }
+
                     const backendURL = `http://localhost:${port}`;
                     console.log("Using backend port:", backendURL);
 
@@ -330,7 +372,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     printLine("> Connection Established.");
                 }, 1000);
             }, 1500);
-        } catch (error) {
+        } catch (authError) {
             wrongPass++;
             console.log(wrongPass);
             printLine("> ERROR: Incorrect password. Try again.");
