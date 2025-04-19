@@ -3,3 +3,4 @@ class Main{
         System.out.println("Poda");
     }
 }
+Main.java
