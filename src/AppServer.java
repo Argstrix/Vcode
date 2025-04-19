@@ -3,7 +3,7 @@ import java.net.*;
 import java.util.concurrent.*;
 
 public class AppServer {
-    private static final int PORT = 9001;
+    private static final int PORT = 9000;
      // Your React build folder
     private static final int THREAD_POOL_SIZE = 10; // Adjust based on load
 

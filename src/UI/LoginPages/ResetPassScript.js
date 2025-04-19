@@ -43,7 +43,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     alert(
                         "Password successfully updated! Redirecting to login..."
                     );
-                    window.location.href = "LoginPage.html"; // Redirect after reset
+                    window.location.href = "/"; // Redirect after reset
                 })
                 .catch((error) => {
                     console.error(error);

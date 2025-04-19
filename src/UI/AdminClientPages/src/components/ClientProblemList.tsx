@@ -56,10 +56,8 @@ const ClientProblemList = () => {
                             <strong>{problem.title}</strong> Difficulty:{" "}
                             {problem.diff}
                             <br />
-                            {problem.tags.map((tag, index) => (
-                                <span key={index} className="tag">
-                                    {tag}
-                                </span>
+                            {problem.tags?.map((tag, index) => (
+                                <span key={index} className="tag">{tag}</span>
                             ))}
                         </Link>
                     </li>

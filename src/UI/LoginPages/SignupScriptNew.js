@@ -84,7 +84,7 @@ document
 
                 // Redirect to Login Page after 2 seconds
                 setTimeout(() => {
-                    window.location.href = "LoginPage.html";
+                    window.location.href = "index.html";
                 }, 2000);
             })
             .catch((error) => {

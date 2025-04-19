@@ -2,12 +2,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     const terminalInput = document.getElementById("terminal-input");
     const commandDisplay = document.getElementById("command");
     const outputDisplay = document.getElementById("output");
-
     let username = "";
     let step = 0; // Step 0: Enter username, Step 1: Enter password
     let wrongPass = 0;
     terminalInput.focus();
     let API_BASE_URL = "http://localhost:9000";
+
     // Initialize Firebase (Replace with your Firebase config)
     const firebaseConfig = {
         apiKey: "AIzaSyAd0yxPkMVoerKq6pPZvXyTbOEaMILss4A",
@@ -23,11 +23,154 @@ document.addEventListener("DOMContentLoaded", async function () {
     const auth = firebase.auth();
     const db = firebase.firestore();
 
-    function printLine(text, delay = 500) {
+    // Session Manager Class
+    class SessionManager {
+        constructor() {
+            this.sessionId = this.getSessionId();
+        }
+
+        // Get session ID from localStorage or create a new one
+        getSessionId() {
+            let sessionId = localStorage.getItem("sessionId");
+            if (!sessionId) {
+                console.log("No session ID found in localStorage");
+            } else {
+                console.log("Using session ID from localStorage:", sessionId);
+            }
+            return sessionId;
+        }
+
+        // Save session ID to localStorage
+        saveSessionId(sessionId) {
+            if (sessionId) {
+                localStorage.setItem("sessionId", sessionId);
+                console.log("Session ID saved to localStorage:", sessionId);
+                this.sessionId = sessionId;
+            }
+        }
+
+        // Clear session data
+        clearSession() {
+            localStorage.removeItem("sessionId");
+            console.log("Session cleared from localStorage");
+            this.sessionId = null;
+        }
+
+        // Check if we have a session
+        hasSession() {
+            return !!this.sessionId;
+        }
+    }
+
+    // API Client with session handling
+    class ApiClient {
+        constructor() {
+            this.baseUrl = API_BASE_URL;
+            this.sessionManager = new SessionManager();
+        }
+
+        // Get port from server
+        async getPort() {
+            try {
+                const response = await fetch(`${this.baseUrl}/get-port`, {
+                    method: "GET",
+                    credentials: "include", // This ensures cookies are sent
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // If the response contains a sessionId, save it
+                if (data.sessionId) {
+                    this.sessionManager.saveSessionId(data.sessionId);
+                }
+
+                return data.port;
+            } catch (error) {
+                console.error("Error getting port:", error);
+                throw error;
+            }
+        }
+
+        // Change context (e.g., switch to admin pages)
+        async changeContext(userData) {
+            try {
+                const response = await fetch(`${this.baseUrl}/change-context`, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        sessionId: this.sessionManager.sessionId,
+                        baseURL: userData.baseURL,
+                        userEmail: userData.userEmail,
+                        role: userData.role,
+                    }),
+                    credentials: "include", // This ensures cookies are sent
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                // If the response contains a sessionId, save it
+                if (data.sessionId) {
+                    this.sessionManager.saveSessionId(data.sessionId);
+                }
+
+                return data;
+            } catch (error) {
+                console.error("Error changing context:", error);
+                throw error;
+            }
+        }
+    }
+
+    // Create instances
+    const sessionManager = new SessionManager();
+    const apiClient = new ApiClient();
+
+    // Check for cookies and update localStorage if needed
+    const cookies = document.cookie.split(";");
+    for (const cookie of cookies) {
+        const [name, value] = cookie.trim().split("=");
+        if (name === "sessionId") {
+            sessionManager.saveSessionId(value);
+            break;
+        }
+    }
+    function scrollToBottom() {
+        const terminalBody = document.querySelector(".terminal-body");
+        terminalBody.scrollTop = terminalBody.scrollHeight;
+    }
+
+    // Modify your printLine function to scroll after adding text
+    function printLine(text, delay = 50) {
         setTimeout(() => {
             outputDisplay.innerHTML += text + "\n";
+            scrollToBottom();
         }, delay);
     }
+
+    // Add click handler to terminal to ensure focus remains on input
+    document.querySelector(".terminal").addEventListener("click", function () {
+        terminalInput.focus();
+    });
+
+    // Ensure focus is maintained when the page loads
+    window.addEventListener("load", function () {
+        terminalInput.focus();
+    });
+
+    // Refocus when window regains focus
+    window.addEventListener("focus", function () {
+        terminalInput.focus();
+    });
 
     terminalInput.addEventListener("keyup", function (event) {
         if (event.key === "Enter") {
@@ -36,7 +179,15 @@ document.addEventListener("DOMContentLoaded", async function () {
             commandDisplay.textContent = "";
             processCommand(command);
         } else {
-            commandDisplay.textContent = terminalInput.value;
+            // Check if we're in password mode
+            if (terminalInput.dataset.passwordMode === "true") {
+                // Display asterisks instead of actual characters
+                commandDisplay.textContent = "*".repeat(
+                    terminalInput.value.length
+                );
+            } else {
+                commandDisplay.textContent = terminalInput.value;
+            }
         }
     });
 
@@ -52,14 +203,14 @@ document.addEventListener("DOMContentLoaded", async function () {
         if (step === 0) {
             username = command;
             printLine(`\n> Searching for user: ${username}...`);
-
             const email = await fetchUserData(username);
-
             if (email) {
                 printLine("> Username accepted");
                 setTimeout(() => {
                     printLine("> Enter password:");
                     step = 1;
+                    // Set a flag to indicate we're in password mode
+                    terminalInput.dataset.passwordMode = "true";
                     terminalInput.focus();
                 }, 500);
             } else {
@@ -67,11 +218,17 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
         } else if (step === 1) {
             const password = command;
+            // Reset password mode flag
+            terminalInput.dataset.passwordMode = "false";
             console.log("Logging in with:", username, password);
-
             const userData = await fetchUserData(username);
             if (userData.email) {
-                verifyPassword(userData.email, password, userData.role);
+                verifyPassword(
+                    userData.email,
+                    password,
+                    userData.role,
+                    username
+                );
             } else {
                 printLine("> ERROR: Could not retrieve user data.");
             }
@@ -84,7 +241,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                 .collection("users")
                 .where("username", "==", username)
                 .get();
-
             if (!querySnapshot.empty) {
                 let userData = null;
                 querySnapshot.forEach((doc) => {
@@ -102,65 +258,72 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    function getBackendPort() {
-        fetch(`${API_BASE_URL}/get-port`)
-            .then((response) => response.json())
-            .then((data) => {
-                API_BASE_URL = `http://localhost:${data.port}`;
-                console.log("Using backend port:", API_BASE_URL);
-            })
-            .catch((error) =>
-                console.error("Error fetching backend port:", error)
-            );
+    async function getBackendPort() {
+        try {
+            // Use the new apiClient instead of direct fetch
+            const port = await apiClient.getPort();
+            API_BASE_URL = `http://localhost:${port}`;
+            console.log("Using backend port:", API_BASE_URL);
+            return port;
+        } catch (error) {
+            console.error("Error fetching backend port:", error);
+            return null;
+        }
     }
 
-    async function verifyPassword(userEmail, inputPassword, role) {
+    async function verifyPassword(userEmail, inputPassword, role, username) {
         try {
             await auth.signInWithEmailAndPassword(userEmail, inputPassword);
-            printLine("> Access granted. Welcome, " + userEmail + "!");
-
+            printLine("> Access granted. Welcome, " + username + "!");
             setTimeout(async () => {
                 printLine("> Initializing secure session...");
-
                 try {
-                    // Get the backend port first
-                    const response = await fetch(`${API_BASE_URL}/get-port`);
-                    const data = await response.json();
-                    API_BASE_URL = `http://localhost:${data.port}`;
-                    console.log("Using backend port:", API_BASE_URL);
+                    // Step 1: Get backend port using the session-aware client
+                    const port = await apiClient.getPort();
+                    const backendURL = `http://localhost:${port}`;
+                    console.log("Using backend port:", backendURL);
 
-                    // Send the role and let the backend handle redirection
-                    const roleResponse = await fetch(
-                        API_BASE_URL + "/store-role",
-                        {
-                            method: "POST",
-                            headers: { "Content-Type": "application/json" },
-                            body: JSON.stringify({
-                                email: userEmail,
-                                role: role,
-                                port: data.port,
-                            }),
-                            credentials: "include", // Ensures cookies are sent
-                        }
-                    );
+                    // Step 2: Store role
+                    await fetch(backendURL + "/store-role", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                            email: userEmail,
+                            role: role,
+                            port: port,
+                        }),
+                        credentials: "include",
+                    });
 
-                    if (roleResponse.redirected) {
-                        console.log("> Redirecting to:", roleResponse.url);
-                        window.location.href = roleResponse.url;
-                    } else {
-                        const roleData = await roleResponse.json();
-                        console.log("Server Response:", roleData);
+                    // Step 3: Save data in localStorage
+                    localStorage.setItem("userEmail", userEmail);
+                    localStorage.setItem("userRole", role);
+                    localStorage.setItem("userPort", port);
 
-                        if (roleData.redirect) {
-                            console.log("> Redirecting to:", roleData.redirect);
-                            window.location.href = roleData.redirect;
-                        }
-                    }
+                    // Step 4: Change context using the session-aware client
+                    await apiClient
+                        .changeContext({
+                            baseURL: backendURL,
+                            userEmail: userEmail,
+                            role: role,
+                        })
+                        .then((res) => {
+                            // Navigate to the new app manually (React side)
+                            console.log("Context changed successfully");
+                            window.location.href = "http://localhost:9000/";
+                        })
+                        .catch((err) => {
+                            console.error("Context change failed", err);
+                            console.log("> ERROR: Failed to change context.");
+                        });
+
+                    console.log("> Session data saved locally.");
                 } catch (error) {
                     console.error(
                         "Error during session initialization:",
                         error
                     );
+                    printLine("> ERROR: Failed to initialize session.");
                 }
 
                 setTimeout(() => {
@@ -169,9 +332,12 @@ document.addEventListener("DOMContentLoaded", async function () {
             }, 1500);
         } catch (error) {
             wrongPass++;
+            console.log(wrongPass);
             printLine("> ERROR: Incorrect password. Try again.");
             console.error("Firebase Auth Error:", error);
+            terminalInput.dataset.passwordMode = "true";
             if (wrongPass > 2) {
+                terminalInput.dataset.passwordMode = "false";
                 printLine(
                     "> Forgot password? Type 'forgot --help' for assistance."
                 );
@@ -189,5 +355,6 @@ document.addEventListener("DOMContentLoaded", async function () {
             setTimeout(typeInitialText, 50);
         }
     }
+
     typeInitialText();
 });

@@ -9,36 +9,61 @@ import ClientDashBoard from "./pages/ClientDashBoard";
 import ClientLayout from "./components/ClientLayout";
 import ProblemPage from "./components/ProblemPage";
 import ClientProblemList from "./components/ClientProblemList";
-import AddProblem from "./components/AddProblem"; // ✅ New import
-
-// Toggle between Admin & Client by changing this variable
-const isAdmin = true;   
-// Set to `false` for client mode
+import AddProblem from "./components/AddProblem";
+import { useUser } from "./context/UserContext"; // ✅ using context
 
 function App() {
+    const { role } = useUser(); // ✅ use inside the function
+
+    const isAdmin = () => role === "teacher";
+    const isStudent = () => role === "student";
+
     return (
         <Router>
             <Routes>
-                {isAdmin ? (
-                    // Admin Routes
+                {/* isAdmin() */}
+                {isAdmin() ? (
                     <Route path="/" element={<AdminLayout />}>
                         <Route index element={<Dashboard />} />
                         <Route path="problems" element={<ProblemList />} />
-                        <Route path="manage-problem" element={<ManageProblem />} />
-                        <Route path="submissions" element={<SubmissionList />} />
+                        <Route
+                            path="manage-problem"
+                            element={<ManageProblem />}
+                        />
+                        <Route
+                            path="submissions"
+                            element={<SubmissionList />}
+                        />
                         <Route path="analytics" element={<ManageProblem />} />
                         <Route path="settings" element={<ManageProblem />} />
-                        <Route path="/editProblem/:id" element={<EditProblem />} />
-                        <Route path="add-problem" element={<AddProblem />} /> {/* ✅ New Route */}
+                        <Route
+                            path="/editProblem/:id"
+                            element={<EditProblem />}
+                        />
+                        <Route path="add-problem" element={<AddProblem />} />
                     </Route>
-                ) : (
-                    // Client Routes
+                ) : isStudent() ? (
                     <Route path="/" element={<ClientLayout />}>
                         <Route index element={<ClientDashBoard />} />
-                        <Route path="cproblems" element={<ClientProblemList />} />
-                        <Route path="csubmissions" element={<SubmissionList />} />
-                        <Route path="problempage/:id" element={<ProblemPage />} />
+                        <Route
+                            path="cproblems"
+                            element={<ClientProblemList />}
+                        />
+                        <Route
+                            path="csubmissions"
+                            element={<SubmissionList />}
+                        />
+                        <Route
+                            path="problempage/:id"
+                            element={<ProblemPage />}
+                        />
                     </Route>
+                ) : (
+                    // fallback if role is invalid
+                    <Route
+                        path="*"
+                        element={<div>Unauthorized or unknown role</div>}
+                    />
                 )}
             </Routes>
         </Router>
