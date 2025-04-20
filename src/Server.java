@@ -32,8 +32,6 @@ public class Server {
 
 class ClientHandler implements Runnable {
     private final Socket clientSocket;
-    private static final String SOURCE_FILE1 = "Main.java";
-    private static final String SOURCE_FILE2 = "main.py";
 
     public ClientHandler(Socket socket) {
         this.clientSocket = socket;
@@ -150,6 +148,22 @@ class ClientHandler implements Runnable {
                                 handlePythonSubmissionAndCheck(code, problemId, out);
                             }
 
+                            case "c" ->{
+                                String filePath = "main.c";
+                                try(FileWriter writer = new FileWriter(filePath)){
+                                    writer.write(code);
+                                }
+                                handleCFilesSubmitAndCheck(code, problemId, out);
+                            }
+
+                            case "cpp" -> {
+                                String filePath = "main.cpp";
+                                try(FileWriter writer = new FileWriter(filePath)){
+                                    writer.write(code);
+                                }
+                                handleCppFileSubmitAndCheck(code, problemId, out);
+                            }
+
                             default -> {
                                 sendJsonResponse(out, 400, Map.of("error", "Unsupported language: " + language));
                             }
@@ -249,6 +263,22 @@ class ClientHandler implements Runnable {
                                     writer.write(code);
                                 }
                                 output = PythonCompilerRunner.run(pythonFile, testInput);
+                            }
+
+                            case "c" -> {
+                                String CFile = "main.c";
+                                try(FileWriter writer = new FileWriter(CFile)){
+                                    writer.write(code);
+                                }
+                                output = CCompilerRunner.run(CFile, testInput);
+                            }
+
+                            case "cpp" -> {
+                                String CppFile = "main.cpp";
+                                try(FileWriter writer = new FileWriter(CppFile)){
+                                    writer.write(code);
+                                }
+                                output = CppCompilerRunner.run(CppFile, testInput);
                             }
 
                             default -> {
@@ -820,6 +850,127 @@ class ClientHandler implements Runnable {
             e.printStackTrace();
         }
     }
+
+    private void handleCFilesSubmitAndCheck(String code, String problemId, BufferedWriter out) {
+    final String SOURCE_FILE = "main.c";
+
+    Map<String, Object> question = getQuestionByIdFromFirebase(problemId);
+    if (question == null || !question.containsKey("cases") || !question.containsKey("code")) {
+        try {
+            sendJsonResponse(out, 404, Map.of("message", "Problem not found or incomplete."));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return;
+    }
+
+    List<String> testCases = (List<String>) question.get("cases");
+    System.out.println(testCases);
+    String expectedCode = question.get("code").toString();
+
+    int passed = 0;
+    StringBuilder resultBuilder = new StringBuilder();
+
+    for (int i = 0; i < testCases.size(); i++) {
+        String input = testCases.get(i);
+        String testCaseNumber = String.valueOf(i + 1); // for display
+
+        try {
+            // Step 1: Run expected code
+            writeToFile("Main.java", expectedCode);
+            String expectedOutput = JavaFileCompiler.compileAndRun("Main.java", input).trim();
+
+            // Step 2: Run submitted code
+            writeToFile(SOURCE_FILE, code);
+            String actualOutput = CCompilerRunner.run(SOURCE_FILE, input).trim();
+
+            // Step 3: Compare outputs
+            if (expectedOutput.equals(actualOutput)) {
+                passed++;
+                resultBuilder.append("Test ").append(testCaseNumber).append(": Success\n");
+            } else {
+                resultBuilder.append("Test ").append(testCaseNumber)
+                        .append(": Failed (Expected: ")
+                        .append(expectedOutput).append(", Got: ")
+                        .append(actualOutput).append(")\n");
+            }
+        } catch (Exception e) {
+            resultBuilder.append("Test ").append(testCaseNumber)
+                    .append(": Error executing code - ")
+                    .append(e.getMessage()).append("\n");
+        }
+    }
+
+    String summary = "Passed " + passed + "/" + testCases.size() + " test cases.\n\n";
+    resultBuilder.insert(0, summary);
+
+    try {
+        sendJsonResponse(out, 200, Map.of("result", resultBuilder.toString()));
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
+private void handleCppFileSubmitAndCheck(String code, String problemId, BufferedWriter out) {
+    final String SOURCE_FILE = "main.cpp";
+
+    Map<String, Object> question = getQuestionByIdFromFirebase(problemId);
+    if (question == null || !question.containsKey("cases") || !question.containsKey("code")) {
+        try {
+            sendJsonResponse(out, 404, Map.of("message", "Problem not found or incomplete."));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return;
+    }
+
+    List<String> testCases = (List<String>) question.get("cases");
+    System.out.println(testCases);
+    String expectedCode = question.get("code").toString();
+
+    int passed = 0;
+    StringBuilder resultBuilder = new StringBuilder();
+
+    for (int i = 0; i < testCases.size(); i++) {
+        String input = testCases.get(i);
+        String testCaseNumber = String.valueOf(i + 1); // for display
+
+        try {
+            // Step 1: Run expected code (in Java, assuming expectedCode is in Java)
+            writeToFile("Main.java", expectedCode);
+            String expectedOutput = JavaFileCompiler.compileAndRun("Main.java", input).trim();
+
+            // Step 2: Run submitted C++ code
+            writeToFile(SOURCE_FILE, code);
+            String actualOutput = CppCompilerRunner.run(SOURCE_FILE, input).trim();
+
+            // Step 3: Compare outputs
+            if (expectedOutput.equals(actualOutput)) {
+                passed++;
+                resultBuilder.append("Test ").append(testCaseNumber).append(": Success\n");
+            } else {
+                resultBuilder.append("Test ").append(testCaseNumber)
+                        .append(": Failed (Expected: ")
+                        .append(expectedOutput).append(", Got: ")
+                        .append(actualOutput).append(")\n");
+            }
+        } catch (Exception e) {
+            resultBuilder.append("Test ").append(testCaseNumber)
+                    .append(": Error executing code - ")
+                    .append(e.getMessage()).append("\n");
+        }
+    }
+
+    String summary = "Passed " + passed + "/" + testCases.size() + " test cases.\n\n";
+    resultBuilder.insert(0, summary);
+
+    try {
+        sendJsonResponse(out, 200, Map.of("result", resultBuilder.toString()));
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+}
+
 
     private void writeToFile(String filename, String content) throws IOException {
         try (FileWriter writer = new FileWriter(filename)) {

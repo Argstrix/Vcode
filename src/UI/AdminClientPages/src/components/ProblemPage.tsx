@@ -127,6 +127,7 @@ const ProblemPage: React.FC = () => {
                         >
                             <option value="python">Python</option>
                             <option value="java">Java</option>
+                            <option value = "c">c</option>
                             <option value="cpp">C++</option>
                             <option value="javascript">JavaScript</option>
                         </select>
