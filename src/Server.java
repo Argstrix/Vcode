@@ -357,7 +357,6 @@ class ClientHandler implements Runnable {
                                 new TypeToken<Map<String, String>>() {
                                 }.getType());
                         submissions.add(submission);
-
                     }
                 }
             }

@@ -12,7 +12,7 @@ const ClientSidebar = () => {
                     <Link to="/manage-problem">View Problems</Link>
                 </li>
                 <li className="listgroupitem">
-                    <Link to="/submissions">Submissions</Link>
+                    <Link to="/client-submissions">Submissions</Link>
                 </li>
                 <li className="listgroupitem">
                     <Link to="/analytics">Performance</Link>

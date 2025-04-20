@@ -11,6 +11,8 @@ import ProblemPage from "./components/ProblemPage";
 import ClientProblemList from "./components/ClientProblemList";
 import AddProblem from "./components/AddProblem";
 import { useUser } from "./context/UserContext"; // ✅ using context
+import ClientSubmissions from "./components/ClientSubmissions";
+import SubmissionDetails from "./components/SubmissionDetails";
 
 function App() {
     const { role } = useUser(); // ✅ use inside the function
@@ -53,6 +55,13 @@ function App() {
                             path="problempage/:id"
                             element={<ProblemPage />}
                         />
+                        <Route
+                        path = "client-submissions"
+                        element = {<ClientSubmissions/>}
+                        />
+                        <Route path="/submission/:id" 
+                        element={<SubmissionDetails />} />
+
                     </Route>
                 ) : (
                     // fallback if role is invalid
