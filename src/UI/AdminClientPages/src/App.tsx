@@ -12,9 +12,11 @@ import ClientProblemList from "./components/ClientProblemList";
 import AddProblem from "./components/AddProblem";
 import { useUser } from "./context/UserContext"; // ✅ using context
 
+import Settings from "./components/Settings";
+
 function App() {
     const { role } = useUser(); // ✅ use inside the function
-    
+
     const isAdmin = () => role === "teacher";
     const isStudent = () => role === "student";
 
@@ -34,8 +36,11 @@ function App() {
                             element={<SubmissionList />}
                         />
                         <Route path="analytics" element={<ManageProblem />} />
-                        <Route path="settings" element={<ManageProblem />} />
-                        <Route path="/editProblem/:id" element={<EditProblem />} />
+                        <Route path="settings" element={<Settings />} />
+                        <Route
+                            path="/editProblem/:id"
+                            element={<EditProblem />}
+                        />
                         <Route path="add-problem" element={<AddProblem />} />
                     </Route>
                 ) : isStudent() ? (
@@ -53,10 +58,14 @@ function App() {
                             path="problempage/:id"
                             element={<ProblemPage />}
                         />
+                        <Route path="settings" element={<Settings />} />
                     </Route>
                 ) : (
                     // fallback if role is invalid
-                    <Route path="*" element={<div>Unauthorized or unknown role</div>} />
+                    <Route
+                        path="*"
+                        element={<div>Unauthorized or unknown role</div>}
+                    />
                 )}
             </Routes>
         </Router>
@@ -64,4 +73,3 @@ function App() {
 }
 
 export default App;
-        

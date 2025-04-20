@@ -1,28 +1,14 @@
-import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import ClientNavbar from "./ClientNavbar";
 import ClientSidebar from "./ClientSidebar";
 import "../styles/ClientLayout.css";
 import "../styles/theme.css";
 import { Outlet } from "react-router-dom";
+import { useTheme } from "../context/ThemeContext";
 
 function ClientLayout() {
-    const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
+    const { theme, toggleTheme } = useTheme();
     const location = useLocation(); // Get the current route
-
-    useEffect(() => {
-        if (theme === "light") {
-            document.body.classList.add("light-theme");
-        } else {
-            document.body.classList.remove("light-theme");
-        }
-    }, [theme]);
-
-    const toggleTheme = () => {
-        const newTheme = theme === "dark" ? "light" : "dark";
-        setTheme(newTheme);
-        localStorage.setItem("theme", newTheme);
-    };
 
     const logout = () => {
         // Clear localStorage items
