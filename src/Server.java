@@ -190,7 +190,7 @@ class ClientHandler implements Runnable {
                     } else {
                         sendJsonResponsew(clientSocket, 400, Map.of("error", "Invalid request format"));
                     }
-                }else if (method.equals("PUT") && path.startsWith("/updateQuestion")) {
+                } else if (method.equals("PUT") && path.startsWith("/updateQuestion")) {
                     System.out.println("Received /updateQuestion request with body: " + requestBody);
                         JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
 
@@ -221,7 +221,7 @@ class ClientHandler implements Runnable {
                         }
                         
                     
-                }else if (method.equals("POST") && path.equals("/compile")) {
+                } else if (method.equals("POST") && path.equals("/compile")) {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
                     String code = jsonObject.get("code").getAsString();
                     String language = jsonObject.get("language").getAsString().toLowerCase();

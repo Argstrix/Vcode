@@ -10,10 +10,10 @@ import java.util.concurrent.Executors;
 public class FrontEndServer {
     private static final int API_PORT = 9000;
     private static final String[] SERVERS = {
-        "127.0.0.1:8080"
-        // "127.0.0.1:8081",
-        // "127.0.0.1:8082",
-        // "127.0.0.1:8083",
+        "127.0.0.1:8080",
+        "127.0.0.1:8081",
+        //"127.0.0.1:8082",
+        //"127.0.0.1:8083"
     };
     private static int currentServerIndex = 0;
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(15);

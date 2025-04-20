@@ -1,8 +1,9 @@
 import { useParams } from "react-router-dom";
 import AdminProblemForm from "./AdminProblemForm";
 import { useEffect, useState } from "react";
-
+import { useUser } from "../context/UserContext";
 const EditProblem = () => {
+    const { port } = useUser();
     const { id } = useParams();
     const [initialData, setInitialData] = useState<any>(null);
     const [loading, setLoading] = useState(true);
@@ -10,7 +11,7 @@ const EditProblem = () => {
     useEffect(() => {
         if (!id) return;
 
-        fetch(`http://localhost:8080/question/${id}`) // Replace PORT with your backend port
+        fetch(`http://localhost:${port}/question/${id}`) // Replace PORT with your backend port
             .then((res) => {
                 if (!res.ok) {
                     throw new Error("Failed to fetch problem data");
@@ -44,7 +45,7 @@ const EditProblem = () => {
         console.log("📤 Updating Problem Data:", payload);
     
         try {
-            const response = await fetch("http://localhost:8080/updateQuestion", {
+            const response = await fetch(`http://localhost:${port}/updateQuestion`, {
                 method: "PUT", 
                 headers: {
                     "Content-Type": "application/json",
