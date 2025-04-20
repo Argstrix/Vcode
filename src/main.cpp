@@ -1,6 +1,6 @@
-#import <iostream>
+#include <iostream>
 using namespace std;
-
-int main(){
-    cout << "This is a stupid string";
+int main()
+{
+    cout<<"Hello POPCORNER"<<endl;
 }
