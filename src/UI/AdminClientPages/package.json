@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
+    "@syncfusion/ej2-react-heatmap": "^29.1.33",
     "firebase": "^11.5.0",
     "monaco-editor": "^0.52.2",
     "react": "^19.0.0",

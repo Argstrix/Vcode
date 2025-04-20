@@ -9,59 +9,45 @@ import ClientDashBoard from "./pages/ClientDashBoard";
 import ClientLayout from "./components/ClientLayout";
 import ProblemPage from "./components/ProblemPage";
 import ClientProblemList from "./components/ClientProblemList";
+import ClientAnalysis from "./components/ClientAnalysis";
 import AddProblem from "./components/AddProblem";
 import { useUser } from "./context/UserContext"; // ✅ using context
 
 function App() {
-    const { role } = useUser(); // ✅ use inside the function
+  const { role } = useUser(); // ✅ use inside the function
 
-    const isAdmin = () => role === "teacher";
-    const isStudent = () => role === "student";
+  const isAdmin = () => role === "teacher";
+  const isStudent = () => role === "student";
 
-    return (
-        <Router>
-            <Routes>
-                {isAdmin() ? (
-                    <Route path="/" element={<AdminLayout />}>
-                        <Route index element={<Dashboard />} />
-                        <Route path="problems" element={<ProblemList />} />
-                        <Route
-                            path="manage-problem"
-                            element={<ManageProblem />}
-                        />
-                        <Route
-                            path="submissions"
-                            element={<SubmissionList />}
-                        />
-                        <Route path="analytics" element={<ManageProblem />} />
-                        <Route path="settings" element={<ManageProblem />} />
-                        <Route path="/editProblem/:id" element={<EditProblem />} />
-                        <Route path="add-problem" element={<AddProblem />} />
-                    </Route>
-                ) : isStudent() ? (
-                    <Route path="/" element={<ClientLayout />}>
-                        <Route index element={<ClientDashBoard />} />
-                        <Route
-                            path="cproblems"
-                            element={<ClientProblemList />}
-                        />
-                        <Route
-                            path="csubmissions"
-                            element={<SubmissionList />}
-                        />
-                        <Route
-                            path="problempage/:id"
-                            element={<ProblemPage />}
-                        />
-                    </Route>
-                ) : (
-                    // fallback if role is invalid
-                    <Route path="*" element={<div>Unauthorized or unknown role</div>} />
-                )}
-            </Routes>
-        </Router>
-    );
+  return (
+    <Router>
+      <Routes>
+        {false ? (
+          <Route path="/" element={<AdminLayout />}>
+            <Route index element={<Dashboard />} />
+            <Route path="problems" element={<ProblemList />} />
+            <Route path="manage-problem" element={<ManageProblem />} />
+            <Route path="submissions" element={<SubmissionList />} />
+            <Route path="analytics" element={<ManageProblem />} />
+            <Route path="settings" element={<ManageProblem />} />
+            <Route path="/editProblem/:id" element={<EditProblem />} />
+            <Route path="add-problem" element={<AddProblem />} />
+          </Route>
+        ) : true ? (
+          <Route path="/" element={<ClientLayout />}>
+            <Route index element={<ClientDashBoard />} />
+            <Route path="cproblems" element={<ClientProblemList />} />
+            <Route path="csubmissions" element={<SubmissionList />} />
+            <Route path="problempage/:id" element={<ProblemPage />} />
+            <Route path="analysis" element={<ClientAnalysis />} />
+          </Route>
+        ) : (
+          // fallback if role is invalid
+          <Route path="*" element={<div>Unauthorized or unknown role</div>} />
+        )}
+      </Routes>
+    </Router>
+  );
 }
 
 export default App;
-        

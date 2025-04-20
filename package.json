@@ -1,5 +1,9 @@
 {
   "dependencies": {
     "monaco-editor": "^0.52.2"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2"
   }
 }
