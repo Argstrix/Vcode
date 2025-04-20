@@ -13,6 +13,7 @@ import AddProblem from "./components/AddProblem";
 import { useUser } from "./context/UserContext"; // ✅ using context
 import ClientSubmissions from "./components/ClientSubmissions";
 import SubmissionDetails from "./components/SubmissionDetails";
+import Settings from "./components/Settings";
 
 function App() {
     const { role } = useUser(); // ✅ use inside the function
@@ -36,7 +37,7 @@ function App() {
                             element={<SubmissionList />}
                         />
                         <Route path="analytics" element={<ManageProblem />} />
-                        <Route path="settings" element={<ManageProblem />} />
+                        <Route path="settings" element={<Settings />} />
                         <Route path="/editProblem/:id" element={<EditProblem />} />
                         <Route path="add-problem" element={<AddProblem />} />
                     </Route>
@@ -61,6 +62,7 @@ function App() {
                         />
                         <Route path="/submission/:id" 
                         element={<SubmissionDetails />} />
+                        <Route path="settings" element={<Settings />} />
 
                     </Route>
                 ) : (
