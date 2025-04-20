@@ -1,85 +1,182 @@
-.problemList-title {
-    font-size: 1.5em;
-    text-align: center;
+body::-webkit-scrollbar {
+  display: none;
 }
 
-/* Problem List Item */
-.pli {
-    text-decoration: none;
-    display: flex;
-    justify-content: space-between;
-    flex-wrap: wrap;
-    align-items: center;
-    background-color: var(--sidebar-bg);
-    color: var(--text-color);
-    border: 1px solid white;
-    padding: 0.6em;
-    transition: 0.25s ease-in;
-    margin-bottom: 0.9em;
-    border-radius: 8px;
-    cursor: pointer;
+html,
+body {
+  overflow: auto;
+  scrollbar-width: none;
 }
 
-.pli:hover {
-    background-color: var(--card-bg);
-    color: #ff3c00;
-    
+html::-webkit-scrollbar {
+  display: none;
 }
 
-/* Problem Content */
-.problem-content {
-    flex: 1;
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 220px;
+  height: max-content;
+  background-color: #1e1e1e;
+  padding: 25px;
+  display: flex;
+  flex-direction: column;
+  gap: 25px;
+  box-shadow: 4px 0 15px rgba(0, 0, 0, 0.7);
 }
 
-/* Difficulty Styling */
+.sidebar a {
+  color: #a0cfa0;
+  text-decoration: none;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 8px;
+  transition: background 0.3s, color 0.3s;
+}
+
+.sidebar a:hover,
+.sidebar .active {
+  background-color: #2a2a2a;
+  color: #d0f0d0;
+  box-shadow: 0 0 10px rgba(160, 207, 160, 0.5);
+}
+
+.main {
+  display: flex;
+  flex-wrap: wrap;
+  padding: 40px;
+  width: fit-content;
+  box-sizing: border-box; /* Include padding in width calculation */
+}
+
+.header {
+  width: 100%;
+  background: #151414;
+  height: fit-content;
+  padding: 20px;
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(160, 207, 160, 0.5);
+  color: #a0cfa0;
+}
+.problems-table {
+  width: 100%;
+  table-layout: fixed; /* This helps with consistent column widths */
+  border-collapse: separate;
+  border-spacing: 0 15px;
+}
+
+.problems-container {
+  flex: 1;
+  width: 100%;
+  overflow: auto; /* For scrolling if needed */
+}
+
+.problems-table th,
+.problems-table td {
+  padding: 15px;
+  text-align: left;
+  background: #181515;
+  width: max-content;
+  border-radius: 8px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.6);
+}
+
+.problems-table th {
+  background: #333;
+  color: #d0f0d0;
+}
+
+.problems-table tr td:first-child a {
+  text-decoration: none;
+  color: #d0f0d0;
+  font-weight: bold;
+  transition: color 0.3s;
+}
+
+.problems-table tr td:first-child a:hover {
+  color: #8fc98f;
+}
+
 .difficulty {
-    font-size: 0.9em;
-    color: #ccc;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
 }
 
-/* Tags */
+.difficulty {
+  background: #8fc98f;
+  color: #27982c;
+}
+
+.medium {
+  background: #f4d03f;
+  color: #edb706;
+}
+
+.hard {
+  background: hsl(6, 97%, 51%);
+  color: #f82323;
+}
+
 .tags {
-    font-size: 0.8em;
-    color: #bbb;
-    
+  font-size: 14px;
+  color: #d0f0d0;
+}
+
+.status-completed {
+  color: #8fc98f;
+}
+
+.status-not-completed {
+  color: #ff6b6b;
+}
+
+.tags {
+  font-size: 0.8em;
+  color: #bbb;
 }
 
 .tag {
-    margin-right: 5px;
-    background: #222;
-    padding: 3px 6px;
-    border-radius: 5px;
+  margin-right: 5px;
+  background: #222;
+  padding: 3px 6px;
+  border-radius: 5px;
 }
 .top-right-btn {
-    position: absolute;
-    top: 0px;
-    right: 10px;
-    background-color: #222;
-    color: #fff;
-    border: none;
-    padding: 5px 10px;
-    font-size: 14px;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .top-right-btn:hover {
-    background-color: #444;
-  }
-  .settings-btn {
-    background: transparent;
-    
-    color: #ccc;
-    font-size: 1.2em;
-    margin-left: 10px;
-    cursor: pointer;
-    transition: padding 0.2s;
-    border: none;
-  }
-  
-  .settings-btn:hover {
-    padding-top: 5px;
-  }
-  
-  
+  position: absolute;
+  top: 0px;
+  right: 10px;
+  background-color: #222;
+  color: #fff;
+  border: none;
+  padding: 5px 10px;
+  font-size: 14px;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
+.top-right-btn:hover {
+  background-color: #444;
+}
+.settings-btn {
+  background: transparent;
+
+  color: #ccc;
+  font-size: 1.2em;
+  margin-left: 10px;
+  cursor: pointer;
+  transition: padding 0.2s;
+  border: none;
+}
+
+.settings-btn:hover {
+  padding-top: 5px;
+}
