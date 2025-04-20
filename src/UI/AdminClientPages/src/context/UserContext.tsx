@@ -22,7 +22,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     useEffect(() => {
         const storedEmail = localStorage.getItem("userEmail");
         const storedRole = localStorage.getItem("userRole") as "teacher" | "student";
-        const storedPort = localStorage.getItem("backendPort");
+        const storedPort = localStorage.getItem("userPort");
 
         setEmail(storedEmail);
         setRole(storedRole);

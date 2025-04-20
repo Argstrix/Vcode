@@ -1,6 +1,8 @@
 import AdminProblemForm from "./AdminProblemForm";
-
+import { useUser } from "../context/UserContext"; 
 const AddProblem = () => {
+    const {port}= useUser();
+    console.log(`${port}`);
     const handleAddSubmit = async (formData: any) => {
         const parsedId = parseInt(formData.id);
         if (isNaN(parsedId)) {
@@ -22,9 +24,9 @@ const AddProblem = () => {
         };
 
         console.log("📤 Submitted Problem Data:", payload);
-
+        
         try {
-            const response = await fetch("http://localhost:8080/addQuestion", {
+            const response = await fetch(`http://localhost:${port}/addQuestion`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

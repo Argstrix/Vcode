@@ -7,6 +7,7 @@ public class LoadBalancer {
     private static final String LB_HOST = "0.0.0.0"; // Listen on all interfaces
     private static final List<String> SERVERS = Arrays.asList(
         "127.0.0.1:8080"
+        
     );
     private static int currentServerIndex = 0;
 

@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "../../../node_modules/bootstrap/dist/css/bootstrap.css";
 import "../styles/ProblemList.css";
 import { useEffect, useState } from "react";
-
+import { useUser } from "../context/UserContext";
 interface Problem {
     id: string;
     title: string;
@@ -11,6 +11,7 @@ interface Problem {
 }
 
 const ProblemList = () => {
+    const {port} = useUser();
     const navigate = useNavigate();
     const [problems, setProblems] = useState<Problem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -24,7 +25,7 @@ const ProblemList = () => {
     };
     const fetchProblems = async () => {
         try {
-            const response = await fetch("http://localhost:8080/question");
+            const response = await fetch(`http://localhost:${port}/question`);
             if (response.ok) {
                 const data = await response.json();
                 setProblems(data);
@@ -39,7 +40,7 @@ const ProblemList = () => {
         if (!confirmDelete) return;
     
         try {
-            const response = await fetch(`http://localhost:8080/clearSingleSubmission/${problemId}`, {
+            const response = await fetch(`http://localhost:${port}/clearSingleSubmission/${problemId}`, {
                 method: "DELETE",
             });
     
@@ -60,7 +61,7 @@ const ProblemList = () => {
     
 
     useEffect(() => {
-        fetch("http://localhost:8080/question") // Replace PORT with your backend server's port
+        fetch(`http://localhost:${port}/question`) // Replace PORT with your backend server's port
             .then((response) => {
                 if (!response.ok) {
                     throw new Error("Failed to fetch problems");

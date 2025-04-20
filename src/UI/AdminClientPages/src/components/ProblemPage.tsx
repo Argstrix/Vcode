@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import "../styles/ProblemPage.css";
-
+import { useUser } from "../context/UserContext";
 const ProblemPage: React.FC = () => {
+  const { port } = useUser();
   const { id } = useParams<{ id: string }>(); // Get the problem ID from the URL
   const [problem, setProblem] = useState<any>(null);
   const [language, setLanguage] = useState("java");
@@ -15,10 +16,13 @@ const ProblemPage: React.FC = () => {
   useEffect(() => {
     const fetchProblemDetails = async () => {
       try {
-        const response = await fetch(`http://localhost:8080/question/${id}`, {
-          method: "GET",
-          headers: { "Content-Type": "application/json" },
-        });
+        const response = await fetch(
+          `http://localhost:${port}/question/${id}`,
+          {
+            method: "GET",
+            headers: { "Content-Type": "application/json" },
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -51,7 +55,7 @@ const ProblemPage: React.FC = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/submitCode", {
+      const response = await fetch(`http://localhost:${port}/submitCode`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
@@ -79,7 +83,7 @@ const ProblemPage: React.FC = () => {
     };
 
     try {
-      const response = await fetch("http://localhost:8080/compile", {
+      const response = await fetch(`http://localhost:${port}/compile`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody),
@@ -123,6 +127,7 @@ const ProblemPage: React.FC = () => {
             >
               <option value="python">Python</option>
               <option value="java">Java</option>
+              <option value="c">c</option>
               <option value="cpp">C++</option>
               <option value="javascript">JavaScript</option>
             </select>
