@@ -11,7 +11,7 @@ interface Problem {
 }
 
 const ProblemList = () => {
-    const {port,hostIP} = useUser();
+    const { port, hostIP } = useUser();
     const navigate = useNavigate();
     const [problems, setProblems] = useState<Problem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -34,16 +34,21 @@ const ProblemList = () => {
             console.error("Error fetching problems:", error);
         }
     };
-    
+
     const handleDeleteClick = async (problemId: string) => {
-        const confirmDelete = window.confirm("Are you sure you want to delete this problem?");
+        const confirmDelete = window.confirm(
+            "Are you sure you want to delete this problem?"
+        );
         if (!confirmDelete) return;
-    
+
         try {
-            const response = await fetch(`http://${hostIP}:${port}/clearSingleSubmission/${problemId}`, {
-                method: "DELETE",
-            });
-    
+            const response = await fetch(
+                `http://${hostIP}:${port}/clearSingleSubmission/${problemId}`,
+                {
+                    method: "DELETE",
+                }
+            );
+
             if (response.ok) {
                 alert("🗑️ Problem deleted successfully!");
                 fetchProblems(); // Refresh the list
@@ -57,8 +62,6 @@ const ProblemList = () => {
             alert("⚠️ Could not connect to the server.");
         }
     };
-    
-    
 
     useEffect(() => {
         fetch(`http://${hostIP}:${port}/question`) // Replace PORT with your backend server's port
@@ -81,7 +84,6 @@ const ProblemList = () => {
     return (
         <div className="overflow-auto">
             <h2 className="problemList-title">Problem List</h2>
-
             <div className="input-group mb-3">
                 <span className="input-group-text bg-dark text-white">🔍</span>
                 <input
@@ -90,20 +92,24 @@ const ProblemList = () => {
                     placeholder="Search problem..."
                 />
             </div>
-
             <div className="mb-4">
-                <button className="btn btn-success" onClick={handleAddProblemClick}>
+                <button
+                    className="btn btn-success"
+                    onClick={handleAddProblemClick}
+                >
                     ➕ Add New Problem
                 </button>
             </div>
-
             {loading ? (
                 <p>Loading problems...</p>
             ) : (
                 <ul className="list-group">
                     {problems.map((problem) => (
                         <li key={problem.id}>
-                            <Link to={"/question/"+problem.id} className="pli">
+                            <Link
+                                to={"/question/" + problem.id}
+                                className="pli"
+                            >
                                 <div className="problem-content">
                                     <strong>{problem.title}</strong>
                                     <div className="difficulty">

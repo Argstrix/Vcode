@@ -2,6 +2,9 @@ import "../styles/ClientDashBoard.css";
 import ClientProblemList from "../components/ClientProblemList";
 import "../../../node_modules/bootstrap/dist/css/bootstrap.css";
 import GitHubHeatmap from "../components/GitHubHeatmap.tsx";
+import DigitalClock from "../components/DigitalClock.tsx";
+import CalendarWidget from "../components/CalendarWidget.tsx";
+
 function ClientDashboard() {
     const generateDummyData = () => {
         const today = new Date();
@@ -13,26 +16,37 @@ function ClientDashboard() {
 
         while (current <= today) {
             const dateStr = current.toISOString().split("T")[0];
-            const count = Math.floor(Math.random() * 10); // random activity count (0-9)
+            const count = Math.floor(Math.random() * 10);
             data.push({ date: dateStr, count });
             current.setDate(current.getDate() + 1);
         }
 
         return data;
     };
+
     const dummyActivityData = generateDummyData();
+
     return (
-        <div className="dashboard">
-            <h1>Welcome to Client Dashboard</h1>
-            <div className="dashboard-cards">
-                <div className="dashboard-card">Problems Solved: 30</div>
-                <div className="dashboard-card">Pending Problems: 4</div>
+        <div className="dashboard-container">
+            <div className="dashboard-left">
+                <h1 style={{ padding: "2rem", fontSize: "3.8em" }}>
+                    Dashboard
+                </h1>
+                <div className="dashboard-cards">
+                    <div className="dashboard-card">Problems Solved: 30</div>
+                    <div className="dashboard-card">Pending Problems: 4</div>
+                </div>
+                <div>
+                    <GitHubHeatmap activityData={dummyActivityData} />
+                </div>
+                <div className="dashboard-card">
+                    <ClientProblemList />
+                </div>
             </div>
-            <div>
-                <GitHubHeatmap activityData={dummyActivityData} />
-            </div>
-            <div className="dashboard_content">
-                <ClientProblemList />
+            <div className="dashboard-right">
+                <div style={{ height: "8.8rem" }}></div>
+                <DigitalClock />
+                <CalendarWidget />
             </div>
         </div>
     );
