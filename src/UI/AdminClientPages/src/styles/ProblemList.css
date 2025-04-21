@@ -81,6 +81,9 @@
   .settings-btn:hover {
     padding-top: 5px;
   }
-  
+  .addprob
+  {
+    color: var(--text-color);
+  }
   
 

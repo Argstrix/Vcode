@@ -14,6 +14,7 @@ import { useUser } from "./context/UserContext"; // ✅ using context
 import ClientSubmissions from "./components/ClientSubmissions";
 import SubmissionDetails from "./components/SubmissionDetails";
 import Settings from "./components/Settings";
+import AdminAnalytics from "./components/AdminAnalytics";
 
 function App() {
     const { role } = useUser(); // ✅ use inside the function
@@ -24,7 +25,7 @@ function App() {
     return (
         <Router>
             <Routes>
-                {isAdmin() ? (
+                {true ? (
                     <Route path="/" element={<AdminLayout />}>
                         <Route index element={<Dashboard />} />
                         <Route path="problems" element={<ProblemList />} />
@@ -36,7 +37,7 @@ function App() {
                             path="submissions"
                             element={<SubmissionList />}
                         />
-                        <Route path="analytics" element={<ManageProblem />} />
+                        <Route path="analytics" element={<AdminAnalytics />} />
                         <Route path="settings" element={<Settings />} />
                         <Route
                             path="/editProblem/:id"
