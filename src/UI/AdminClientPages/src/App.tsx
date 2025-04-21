@@ -11,7 +11,8 @@ import ProblemPage from "./components/ProblemPage";
 import ClientProblemList from "./components/ClientProblemList";
 import AddProblem from "./components/AddProblem";
 import { useUser } from "./context/UserContext"; // ✅ using context
-
+import ClientSubmissions from "./components/ClientSubmissions";
+import SubmissionDetails from "./components/SubmissionDetails";
 import Settings from "./components/Settings";
 
 function App() {
@@ -57,6 +58,14 @@ function App() {
                         <Route
                             path="problempage/:id"
                             element={<ProblemPage />}
+                        />
+                        <Route
+                            path="client-submissions"
+                            element={<ClientSubmissions />}
+                        />
+                        <Route
+                            path="/submission/:id"
+                            element={<SubmissionDetails />}
                         />
                         <Route path="settings" element={<Settings />} />
                     </Route>

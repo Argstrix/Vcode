@@ -1,44 +1,45 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
+//import React, {useEffect } from "react";
 import { useTheme } from "../context/ThemeContext";
-import { useUser } from "../context/UserContext";
-import { collection, query, where, getDocs } from "firebase/firestore";
-import { db } from "../firebase"; // Your firebase config
+//import { useUser } from "../context/UserContext";
+//import { collection, query, where, getDocs } from "firebase/firestore";
+// import { db } from "../firebase"; // Your firebase config
 import "../styles/Settings.css";
 
 const Settings: React.FC = () => {
-    const { email: userEmail } = useUser();
-    const [user, setUser] = useState<{
-        email: string;
-        regNo: string;
-        role: string;
-    } | null>(null);
+    //const { email: userEmail } = useUser();
+    // const [user, setUser] = useState<{
+    //     email: string;
+    //     regNo: string;
+    //     role: string;
+    // } | null>(null);
     const [resetStatus, setResetStatus] = useState<string | null>(null);
     const { theme, toggleTheme } = useTheme();
 
-    useEffect(() => {
-        if (!userEmail) return;
+    // // useEffect(() => {
+    // //     if (!userEmail) return;
 
-        const fetchUserDetails = async () => {
-            try {
-                const usersRef = collection(db, "users");
-                const q = query(usersRef, where("email", "==", userEmail));
-                const querySnapshot = await getDocs(q);
-                if (!querySnapshot.empty) {
-                    const doc = querySnapshot.docs[0];
-                    const data = doc.data();
-                    setUser({
-                        email: data.email || "",
-                        regNo: data.regNo || "",
-                        role: data.role || "",
-                    });
-                }
-            } catch (error) {
-                console.error("Error fetching user details:", error);
-            }
-        };
+    // //     const fetchUserDetails = async () => {
+    // //         try {
+    // //             const usersRef = collection(db, "users");
+    // //             const q = query(usersRef, where("email", "==", userEmail));
+    // //             const querySnapshot = await getDocs(q);
+    // //             if (!querySnapshot.empty) {
+    // //                 const doc = querySnapshot.docs[0];
+    // //                 const data = doc.data();
+    // //                 setUser({
+    // //                     email: data.email || "",
+    // //                     regNo: data.regNo || "",
+    // //                     role: data.role || "",
+    // //                 });
+    // //             }
+    // //         } catch (error) {
+    // //             console.error("Error fetching user details:", error);
+    // //         }
+    // //     };
 
-        fetchUserDetails();
-    }, [userEmail]);
+    //     fetchUserDetails();
+    // }, [userEmail]);
 
     const handleResetPassword = async () => {
         try {
@@ -63,19 +64,19 @@ const Settings: React.FC = () => {
                 <div>
                     <span className="settings-label">Email:</span>
                     <span className="settings-label-details">
-                        {user?.email || "Loading..."}
+                        {/* {user?.email || "Loading..."} */}example@example.com
                     </span>
                 </div>
                 <div>
                     <span className="settings-label">Registration Number:</span>
                     <span className="settings-label-details">
-                        {user?.regNo || "Loading..."}
+                        {/* {user?.regNo || "Loading..."} */}11BCE1111
                     </span>
                 </div>
                 <div>
                     <span className="settings-label">Role:</span>
                     <span className="settings-label-details">
-                        {user?.role || "Loading..."}
+                        {/* {user?.role || "Loading..."} */}Student
                     </span>
                 </div>
             </div>

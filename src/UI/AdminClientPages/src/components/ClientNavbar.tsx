@@ -11,10 +11,10 @@ function ClientNavbar({ children }: NavbarProp) {
             <div className="nav-links">
                 <Link to="/">Dashboard</Link>
                 <Link to="/manage-problem">Problems</Link>
-                <Link to="/submissions">Submissions</Link>
+                <Link to="/client-submissions">Submissions</Link>
             </div>
             <div>{children}</div>
-        </nav>
+        </nav> 
     );
 }
 

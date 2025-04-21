@@ -4,10 +4,12 @@ import Sidebar from "./Sidebar";
 import "../styles/AdminLayout.css";
 import "../styles/theme.css";
 import { Outlet } from "react-router-dom";
+import { useUser } from "../context/UserContext"; 
 
 function AdminLayout() {
     // Get stored theme preference or default to dark mode
     const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
+    const {hostIP} = useUser();
 
     useEffect(() => {
         if (theme === "light") {
@@ -31,7 +33,7 @@ function AdminLayout() {
         localStorage.removeItem("userPort");
 
         // Call server logout endpoint with credentials
-        fetch("http://localhost:9000/logout", {
+        fetch(`http://${hostIP}:9000/logout`, {
             method: "POST",
             credentials: "include", // Important for cookies
             headers: {
@@ -42,7 +44,7 @@ function AdminLayout() {
                 if (response.ok) {
                     console.log("Logged out successfully");
                     // Redirect to login page
-                    window.location.href = "http://localhost:9000/";
+                    window.location.href = `http://${hostIP}:9000/`;
                 } else {
                     console.error("Logout failed:", response.statusText);
                     alert("Logout failed. Please try again.");
@@ -53,7 +55,7 @@ function AdminLayout() {
                 alert("Error during logout. Please try again.");
 
                 // Fallback: redirect anyway if server is unreachable
-                window.location.href = "http://localhost:9000/";
+                window.location.href = `http://${hostIP}:9000/`;
             });
     };
 
