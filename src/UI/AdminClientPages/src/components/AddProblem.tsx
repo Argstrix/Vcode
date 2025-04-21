@@ -1,7 +1,8 @@
 import AdminProblemForm from "./AdminProblemForm";
 import { useUser } from "../context/UserContext"; 
+
 const AddProblem = () => {
-    const {port}= useUser();
+    const {port,hostIP}= useUser();
     console.log(`${port}`);
     const handleAddSubmit = async (formData: any) => {
         const parsedId = parseInt(formData.id);
@@ -26,7 +27,7 @@ const AddProblem = () => {
         console.log("📤 Submitted Problem Data:", payload);
         
         try {
-            const response = await fetch(`http://localhost:${port}/addQuestion`, {
+            const response = await fetch(`http://${hostIP}:${port}/addQuestion`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",

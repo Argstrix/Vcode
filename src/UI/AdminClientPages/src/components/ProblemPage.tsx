@@ -4,7 +4,7 @@ import Editor from "@monaco-editor/react";
 import "../styles/ProblemPage.css";
 import {useUser} from "../context/UserContext";
 const ProblemPage: React.FC = () => {
-    const {port} = useUser();
+    const {port,hostIP} = useUser();
     const { id } = useParams<{ id: string }>(); // Get the problem ID from the URL
     const [problem, setProblem] = useState<any>(null);
     const [language, setLanguage] = useState("java");
@@ -17,7 +17,7 @@ const ProblemPage: React.FC = () => {
         const fetchProblemDetails = async () => {
             try {
                 const response = await fetch(
-                    `http://localhost:${port}/question/${id}`,
+                    `http://${hostIP}:${port}/question/${id}`,
                     {
                         method: "GET",
                         headers: { "Content-Type": "application/json" },
@@ -55,7 +55,7 @@ const ProblemPage: React.FC = () => {
         };
     
         try {
-            const response = await fetch(`http://localhost:${port}/submitCode`, {
+            const response = await fetch(`http://${hostIP}:${port}/submitCode`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(requestBody),
@@ -83,7 +83,7 @@ const ProblemPage: React.FC = () => {
         };
 
         try {
-            const response = await fetch(`http://localhost:${port}/compile`, {
+            const response = await fetch(`http://${hostIP}:${port}/compile`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(requestBody),

@@ -1,1 +1,1 @@
-print("This is fake nattys achievement")
+print("1 2 3 4 5 ")

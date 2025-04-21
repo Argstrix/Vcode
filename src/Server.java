@@ -15,12 +15,15 @@ public class Server {
             "https://admin-panel.yourdomain.com", // Admin panel
             "http://localhost:9000", // Local development frontend
             "http://127.0.0.1:9000",
-            "http://localhost:5173" // Alternative local address
+            "http://localhost:5173",
+            "http://192.168.1.6:9000",
+            "http://192.168.1.6:9001" // Alternative local address
     );
 
     public static void main(String[] args) throws IOException {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : 8080;
-        ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getByName("0.0.0.0"));
+        ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getByAddress(new byte[] {0,0,0,0}));
+
         System.out.println("Server running on port " + port);
 
         while (true) {
@@ -357,7 +360,6 @@ class ClientHandler implements Runnable {
                                 new TypeToken<Map<String, String>>() {
                                 }.getType());
                         submissions.add(submission);
-
                     }
                 }
             }

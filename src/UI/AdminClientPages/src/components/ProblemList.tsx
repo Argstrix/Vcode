@@ -11,7 +11,7 @@ interface Problem {
 }
 
 const ProblemList = () => {
-    const {port} = useUser();
+    const {port,hostIP} = useUser();
     const navigate = useNavigate();
     const [problems, setProblems] = useState<Problem[]>([]);
     const [loading, setLoading] = useState(true);
@@ -25,7 +25,7 @@ const ProblemList = () => {
     };
     const fetchProblems = async () => {
         try {
-            const response = await fetch(`http://localhost:${port}/question`);
+            const response = await fetch(`http://${hostIP}:${port}/question`);
             if (response.ok) {
                 const data = await response.json();
                 setProblems(data);
@@ -40,7 +40,7 @@ const ProblemList = () => {
         if (!confirmDelete) return;
     
         try {
-            const response = await fetch(`http://localhost:${port}/clearSingleSubmission/${problemId}`, {
+            const response = await fetch(`http://${hostIP}:${port}/clearSingleSubmission/${problemId}`, {
                 method: "DELETE",
             });
     
@@ -61,7 +61,7 @@ const ProblemList = () => {
     
 
     useEffect(() => {
-        fetch(`http://localhost:${port}/question`) // Replace PORT with your backend server's port
+        fetch(`http://${hostIP}:${port}/question`) // Replace PORT with your backend server's port
             .then((response) => {
                 if (!response.ok) {
                     throw new Error("Failed to fetch problems");

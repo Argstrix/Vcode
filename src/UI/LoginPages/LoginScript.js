@@ -6,7 +6,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     let step = 0; // Step 0: Enter username, Step 1: Enter password
     let wrongPass = 0;
     terminalInput.focus();
-    let API_BASE_URL = "http://localhost:9000";
+    let API_BASE_URL = "http://192.168.1.6:9000";
+    let URL = "192.168.1.6";
 
     // Initialize Firebase (Replace with your Firebase config)
     const firebaseConfig = {
@@ -262,19 +263,6 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    async function getBackendPort() {
-        try {
-            // Use the new apiClient instead of direct fetch
-            const port = await apiClient.getPort();
-            API_BASE_URL = `http://localhost:${port}`;
-            console.log("Using backend port:", API_BASE_URL);
-            return port;
-        } catch (error) {
-            console.error("Error fetching backend port:", error);
-            return null;
-        }
-    }
-
     async function verifyPassword(userEmail, inputPassword, role, username) {
         try {
             // Step 1: Authenticate with Firebase
@@ -290,7 +278,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                         throw new Error("Failed to get backend port");
                     }
 
-                    const backendURL = `http://localhost:${port}`;
+                    const backendURL = `http://${URL}:${port}`;
                     console.log("Using backend port:", backendURL);
 
                     // Step 2: Store role
@@ -320,7 +308,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                         .then((res) => {
                             // Navigate to the new app manually (React side)
                             console.log("Context changed successfully");
-                            window.location.href = "http://localhost:9000/";
+                            window.location.href = `http://${URL}:9000/`;
                         })
                         .catch((err) => {
                             console.error("Context change failed", err);
@@ -367,4 +355,3 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     typeInitialText();
 });
-
