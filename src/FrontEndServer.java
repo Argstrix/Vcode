@@ -23,16 +23,20 @@ public class FrontEndServer {
     private static ConcurrentHashMap<String, String> sessionBaseDirs = new ConcurrentHashMap<>();
 
     public static void main(String[] args) {
-        try (ServerSocket apiServer = new ServerSocket(API_PORT)) {
-            System.out.println("API Server running on port " + API_PORT);
-            while (true) {
-                Socket apiClient = apiServer.accept();
-                threadPool.execute(() -> handleRequest(apiClient));
+        try {
+            InetAddress bindAddr = InetAddress.getByName("0.0.0.0");
+            try (ServerSocket apiServer = new ServerSocket(API_PORT, 50, bindAddr)) {
+                System.out.println("API Server running on port " + API_PORT);
+                while (true) {
+                    Socket apiClient = apiServer.accept();
+                    threadPool.execute(() -> handleRequest(apiClient));
+                }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
+    
 
     private static synchronized String getNextServer() {
         String server = SERVERS[currentServerIndex];
@@ -245,7 +249,7 @@ public class FrontEndServer {
         
         // Since both frontend and backend are on the same origin, we don't need specific CORS headers
         // But we'll keep them for consistency with the rest of your code
-        responseBuilder.append("Access-Control-Allow-Origin: http://localhost:9000\r\n");
+        responseBuilder.append("Access-Control-Allow-Origin: http://192.168.67.185:9000\r\n");
         responseBuilder.append("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n");
         responseBuilder.append("Access-Control-Allow-Headers: Content-Type\r\n");
         

@@ -3,8 +3,9 @@ import { Link } from "react-router-dom";
 import "../../../node_modules/bootstrap/dist/css/bootstrap.css";
 import "../styles/ProblemList.css";
 import { useUser } from "../context/UserContext";
+
 const ClientProblemList = () => {
-    const {port} = useUser();
+    const {port,hostIP} = useUser();
     const [problems, setProblems] = useState([
         { id: 1, title: "Two Sum", diff: "Easy", tags: ["Array", "HashMap"] },
         {
@@ -25,7 +26,7 @@ const ClientProblemList = () => {
     useEffect(() => {
         const fetchProblems = async () => {
             try {
-                const response = await fetch(`http://localhost:${port}/question`, {
+                const response = await fetch(`http://${hostIP}:${port}/question`, {
                     method: "GET",
                     headers: { "Content-Type": "application/json" },
                 });

@@ -12,7 +12,7 @@ interface Submission {
 }
 
 const ClientSubmissions: React.FC = () => {
-  const { port } = useUser();
+  const { port,hostIP } = useUser();
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
@@ -21,7 +21,7 @@ const ClientSubmissions: React.FC = () => {
   useEffect(() => {
     const fetchSubmissions = async () => {
       try {
-        const response = await fetch(`http://localhost:${port}/submissions`);
+        const response = await fetch(`http://${hostIP}:${port}/submissions`);
         if (!response.ok) {
           throw new Error("Failed to fetch submissions");
         }

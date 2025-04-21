@@ -4,12 +4,14 @@ interface UserContextType {
     email: string | null;
     role: "teacher" | "student" | null;
     port: string | null;
+    hostIP: string; 
 }
 
 const UserContext = createContext<UserContextType>({
     email: null,
     role: null,
     port: null,
+    hostIP: "192.168.67.185", 
 });
 
 export const useUser = () => useContext(UserContext);
@@ -18,6 +20,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [email, setEmail] = useState<string | null>(null);
     const [role, setRole] = useState<"teacher" | "student" | null>(null);
     const [port, setPort] = useState<string | null>(null);
+    const hostIP = "192.168.67.185"; // Server IP 
 
     useEffect(() => {
         const storedEmail = localStorage.getItem("userEmail");
@@ -30,7 +33,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }, []);
 
     return (
-        <UserContext.Provider value={{ email, role, port }}>
+        <UserContext.Provider value={{ email, role, port, hostIP }}>
             {children}
         </UserContext.Provider>
     );

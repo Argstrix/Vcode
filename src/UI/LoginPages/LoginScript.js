@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     let step = 0; // Step 0: Enter username, Step 1: Enter password
     let wrongPass = 0;
     terminalInput.focus();
-    let API_BASE_URL = "http://localhost:9000";
+    let API_BASE_URL = "http://192.168.67.185:9000";
 
     // Initialize Firebase (Replace with your Firebase config)
     const firebaseConfig = {
@@ -288,7 +288,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                         throw new Error("Failed to get backend port");
                     }
 
-                    const backendURL = `http://localhost:${port}`;
+                    const backendURL = `http://192.168.67.185:${port}`;
                     console.log("Using backend port:", backendURL);
 
                     // Step 2: Store role
@@ -318,7 +318,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                         .then((res) => {
                             // Navigate to the new app manually (React side)
                             console.log("Context changed successfully");
-                            window.location.href = "http://localhost:9000/";
+                            window.location.href = "http://192.168.67.185:9000/";
                         })
                         .catch((err) => {
                             console.error("Context change failed", err);
