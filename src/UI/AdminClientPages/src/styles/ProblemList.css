@@ -17,6 +17,7 @@
     transition: 0.25s ease-in;
     margin-bottom: 0.9em;
     border-radius: 8px;
+    gap:2em;
     cursor: pointer;
 }
 

@@ -23,7 +23,7 @@ public class FrontEndServer {
     private static ConcurrentHashMap<String, String> sessionBaseDirs = new ConcurrentHashMap<>();
 
     public static void main(String[] args) {
-        try (ServerSocket apiServer = new ServerSocket(API_PORT)) {
+        try (ServerSocket apiServer = new ServerSocket(API_PORT, 50, InetAddress.getByName("0.0.0.0"))) {
             System.out.println("API Server running on port " + API_PORT);
             while (true) {
                 Socket apiClient = apiServer.accept();

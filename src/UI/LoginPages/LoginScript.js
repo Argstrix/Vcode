@@ -147,10 +147,12 @@ document.addEventListener("DOMContentLoaded", async function () {
     for (const cookie of cookies) {
         const [name, value] = cookie.trim().split("=");
         if (name === "sessionId") {
+            console.log("Cookie found!")
             sessionManager.saveSessionId(value);
             break;
         }
     }
+    console.log(cookies);
 
     function printLine(text, delay = 500) {
         setTimeout(() => {
