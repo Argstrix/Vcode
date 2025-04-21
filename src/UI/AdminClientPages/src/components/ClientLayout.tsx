@@ -1,4 +1,5 @@
 import { useLocation } from "react-router-dom";
+import { useEffect } from "react";
 import ClientNavbar from "./ClientNavbar";
 import ClientSidebar from "./ClientSidebar";
 import "../styles/ClientLayout.css";
@@ -18,12 +19,6 @@ function ClientLayout() {
             document.body.classList.remove("light-theme");
         }
     }, [theme]);
-
-    const toggleTheme = () => {
-        const newTheme = theme === "dark" ? "light" : "dark";
-        setTheme(newTheme);
-        localStorage.setItem("theme", newTheme);
-    };
 
     const logout = () => {
         // Clear localStorage items

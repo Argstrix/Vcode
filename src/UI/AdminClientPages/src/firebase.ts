@@ -1,31 +1,19 @@
-import { initializeApp } from "firebase/app";
-import { getFirestore, collection, getDocs } from "firebase/firestore";
+import firebase from "firebase/compat/app";
+import "firebase/compat/auth";
+import "firebase/compat/firestore";
 
-// Firebase configuration
 const firebaseConfig = {
-    apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-    authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-    projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-    storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-    messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-    appId: import.meta.env.VITE_FIREBASE_APP_ID,
+    apiKey: "AIzaSyAd0yxPkMVoerKq6pPZvXyTbOEaMILss4A",
+    authDomain: "vcode-3b099.firebaseapp.com",
+    projectId: "vcode-3b099",
+    storageBucket: "vcode-3b099.appspot.com",
+    messagingSenderId: "230736955287",
+    appId: "1:230736955287:web:926fc8df65c6386eb326d2",
+    measurementId: "G-NMDL4TH3T3",
 };
 
-// Initialize Firebase
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app = firebase.initializeApp(firebaseConfig);
+const auth = app.auth();
+const db = app.firestore();
 
-// A simple function to test Firebase
-export const testFirebase = async () => {
-    try {
-        const querySnapshot = await getDocs(collection(db, "testCollection"));
-        querySnapshot.forEach((doc) => {
-            console.log(doc.id, " => ", doc.data());
-        });
-    } catch (error) {
-        console.error("Error accessing Firebase:", error);
-    }
-};
-
-// Export the db for other uses
-export { db };
+export { auth, db };

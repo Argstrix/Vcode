@@ -16,8 +16,8 @@ public class Server {
             "http://localhost:9000", // Local development frontend
             "http://127.0.0.1:9000",
             "http://localhost:5173",
-            "http://192.168.67.185:9000",
-            "http://192.168.67.185:9001" // Alternative local address
+            "http://192.168.0.101:9000",
+            "http://192.168.0.101:9001" // Alternative local address
     );
 
     public static void main(String[] args) throws IOException {
