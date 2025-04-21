@@ -11,7 +11,7 @@ const UserContext = createContext<UserContextType>({
     email: null,
     role: null,
     port: null,
-    hostIP: "192.168.1.6",
+    hostIP: "192.168.0.101",
 });
 
 export const useUser = () => useContext(UserContext);

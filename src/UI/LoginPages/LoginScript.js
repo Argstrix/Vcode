@@ -6,8 +6,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     let step = 0; // Step 0: Enter username, Step 1: Enter password
     let wrongPass = 0;
     terminalInput.focus();
-    let API_BASE_URL = "http://192.168.1.6:9000";
-    let URL = "192.168.1.6";
+    let API_BASE_URL = "http://192.168.0.101:9000";
+    let URL = "192.168.0.101";
 
     // Initialize Firebase (Replace with your Firebase config)
     const firebaseConfig = {
@@ -148,7 +148,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     for (const cookie of cookies) {
         const [name, value] = cookie.trim().split("=");
         if (name === "sessionId") {
-            console.log("Cookie found!")
+            console.log("Cookie found!");
             sessionManager.saveSessionId(value);
             break;
         }

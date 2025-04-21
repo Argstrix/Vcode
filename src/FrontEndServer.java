@@ -249,7 +249,7 @@ public class FrontEndServer {
         
         // Since both frontend and backend are on the same origin, we don't need specific CORS headers
         // But we'll keep them for consistency with the rest of your code
-        responseBuilder.append("Access-Control-Allow-Origin: http://192.168.1.6:9000\r\n");
+        responseBuilder.append("Access-Control-Allow-Origin: http://192.168.0.101:9000\r\n");
         responseBuilder.append("Access-Control-Allow-Methods: GET, POST, OPTIONS\r\n");
         responseBuilder.append("Access-Control-Allow-Headers: Content-Type\r\n");
         
