@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useParams } from "react-router-dom";
 import Editor from "@monaco-editor/react";
 import "../styles/ProblemPage.css";
-import {useUser} from "../context/UserContext";
+import { useUser } from "../context/UserContext";
+
 const ProblemPage: React.FC = () => {
-    const {port,hostIP} = useUser();
+    const { port, hostIP, userName } = useUser();
     const { id } = useParams<{ id: string }>(); // Get the problem ID from the URL
     const [problem, setProblem] = useState<any>(null);
     const [language, setLanguage] = useState("java");
@@ -12,6 +13,8 @@ const ProblemPage: React.FC = () => {
     const [output, setOutput] = useState("No output yet...");
     const [customTest, setCustomTest] = useState("");
 
+    const startTime = useRef<number>(Date.now());  // Track start time directly here
+    console.log(startTime);
     // Fetch problem details from the backend
     useEffect(() => {
         const fetchProblemDetails = async () => {
@@ -46,25 +49,31 @@ const ProblemPage: React.FC = () => {
     }, [id]);
 
     const handleSubmitCode = async () => {
+        const endTime = Date.now(); // Record time when submitting
+        console.log(endTime);
+        const timeTaken = ((endTime - startTime.current)/ 1000).toFixed(0); // Calculate time difference in seconds
+
         setOutput("Submitting code...");
-    
+        
         const requestBody = {
-            language,
-            code,
+            userId: userName,
             problemId: id,
+            code,
+            language,
+            timeTaken,  // Submit the dynamically calculated timeTaken
         };
-    
+
         try {
             const response = await fetch(`http://${hostIP}:${port}/submitCode`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(requestBody),
             });
-    
+
             if (!response.ok) {
                 throw new Error(`HTTP error! Status: ${response.status}`);
             }
-    
+
             const data = await response.json();
             setOutput(data.result || "No result received from server.");
         } catch (error) {
@@ -72,7 +81,7 @@ const ProblemPage: React.FC = () => {
             setOutput("Error submitting code.");
         }
     };
-    
+
     const handleRunCode = async () => {
         setOutput("Running code...");
 
@@ -127,7 +136,7 @@ const ProblemPage: React.FC = () => {
                         >
                             <option value="python">Python</option>
                             <option value="java">Java</option>
-                            <option value = "c">c</option>
+                            <option value="c">C</option>
                             <option value="cpp">C++</option>
                             <option value="javascript">JavaScript</option>
                         </select>

@@ -3,22 +3,24 @@ import "../../../node_modules/bootstrap/dist/css/bootstrap.css";
 import "../styles/ProblemList.css";
 import { useEffect, useState } from "react";
 import { useUser } from "../context/UserContext";
+
 interface Problem {
-    id: string;
-    title: string;
-    difficulty: string;
-    tags: string[];
+  id: string;
+  title: string;
+  difficulty: string;
+  tags: string[];
 }
 
 const ProblemList = () => {
-    const { port, hostIP } = useUser();
+    
+    const { port, hostIP} = useUser();
     const navigate = useNavigate();
     const [problems, setProblems] = useState<Problem[]>([]);
     const [loading, setLoading] = useState(true);
 
-    const handleEditClick = (problemId: string) => {
-        navigate(`/editProblem/${problemId}`);
-    };
+  const handleEditClick = (problemId: string) => {
+    navigate(`/editProblem/${problemId}`);
+  };
 
     const handleAddProblemClick = () => {
         navigate("/add-problem");
@@ -63,23 +65,23 @@ const ProblemList = () => {
         }
     };
 
-    useEffect(() => {
-        fetch(`http://${hostIP}:${port}/question`) // Replace PORT with your backend server's port
-            .then((response) => {
-                if (!response.ok) {
-                    throw new Error("Failed to fetch problems");
-                }
-                return response.json();
-            })
-            .then((data) => {
-                setProblems(data);
-                setLoading(false);
-            })
-            .catch((error) => {
-                console.error("Error fetching problems:", error);
-                setLoading(false);
-            });
-    }, []);
+  useEffect(() => {
+    fetch(`http://${hostIP}:${port}/question`)
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch problems");
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setProblems(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching problems:", error);
+        setLoading(false);
+      });
+  }, []);
 
     return (
         <div className="overflow-auto">

@@ -302,6 +302,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     localStorage.setItem("userEmail", userEmail);
                     localStorage.setItem("userRole", role);
                     localStorage.setItem("userPort", port);
+                    localStorage.setItem("userName",username);
 
                     // Step 4: Change context using the session-aware client
                     await apiClient

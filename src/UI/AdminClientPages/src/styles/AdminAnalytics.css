@@ -1,0 +1,49 @@
+:root {
+    --bg-dark: #0d0d0d;
+    --text-color: #aaffaa;
+    --accent: #00ff88;
+    --card-bg: #111;
+  }
+  
+  .admin-analytics-container {
+    padding: 2em;
+    background-color: var(--bg-dark);
+    min-height: 100vh;
+    color: var(--text-color);
+  }
+  
+  .admin-title {
+    text-align: center;
+    font-size: 2em;
+    margin-bottom: 1em;
+  }
+  
+  .admin-section {
+    background-color: var(--card-bg);
+    padding: 1.5em;
+    border-radius: 10px;
+    margin-bottom: 2em;
+    border: 1px solid #222;
+  }
+  
+  .admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1em;
+  }
+  
+  .admin-table th, .admin-table td {
+    border: 1px solid #333;
+    padding: 0.75em;
+    text-align: left;
+  }
+  
+  .admin-table th {
+    background-color: #1a1a1a;
+    color: var(--accent);
+  }
+  
+  .admin-table tr:hover {
+    background-color: #191919;
+  }
+  
