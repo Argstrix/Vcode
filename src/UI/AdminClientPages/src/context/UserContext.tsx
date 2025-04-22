@@ -11,7 +11,7 @@ const UserContext = createContext<UserContextType>({
     email: null,
     role: null,
     port: null,
-    hostIP: "192.168.0.101",
+    hostIP: "192.168.67.185",
 });
 
 export const useUser = () => useContext(UserContext);
@@ -20,7 +20,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [email, setEmail] = useState<string | null>(null);
     const [role, setRole] = useState<"teacher" | "student" | null>(null);
     const [port, setPort] = useState<string | null>(null);
-    const hostIP = "192.168.0.101"; // Server IP
+    const hostIP = "192.168.67.185"; // Server IP
 
     useEffect(() => {
         const storedEmail = localStorage.getItem("userEmail");

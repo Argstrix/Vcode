@@ -6,8 +6,8 @@ document.addEventListener("DOMContentLoaded", async function () {
     let step = 0; // Step 0: Enter username, Step 1: Enter password
     let wrongPass = 0;
     terminalInput.focus();
-    let API_BASE_URL = "http://192.168.0.101:9000";
-    let URL = "192.168.0.101";
+    let API_BASE_URL = "http://192.168.67.185:9000";
+    let URL = "192.168.67.185";
 
     // Initialize Firebase (Replace with your Firebase config)
     const firebaseConfig = {
@@ -196,6 +196,11 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     });
 
+    function scrollToBottom() {
+        const terminalBody = document.querySelector(".terminal-body");
+        terminalBody.scrollTop = terminalBody.scrollHeight;
+    }   
+
     async function processCommand(command) {
         if (command === "forgot --help") {
             printLine("> Redirecting to Forgot Password page...");
@@ -330,11 +335,11 @@ document.addEventListener("DOMContentLoaded", async function () {
             }, 1500);
         } catch (authError) {
             wrongPass++;
+            terminalInput.dataset.passwordMode = "true";
             console.log(wrongPass);
             printLine("> ERROR: Incorrect password. Try again.");
-            console.error("Firebase Auth Error:", error);
-            terminalInput.dataset.passwordMode = "true";
             if (wrongPass > 2) {
+                terminalInput.dataset.passwordMode = "false";
                 printLine(
                     "> Forgot password? Type 'forgot --help' for assistance."
                 );
