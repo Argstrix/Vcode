@@ -8,6 +8,7 @@ html {
     -ms-overflow-style: none;
 }
 
+
 .panel {
     background: var(--card-bg);
     color: var(--text-color);

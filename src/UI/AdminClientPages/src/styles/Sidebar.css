@@ -4,7 +4,7 @@
   top: 0;
   left: 0;
   height: 100%;
-  width: 25px; /* Invisible hover zone */
+  width: 7%; /* Invisible hover zone */
   z-index: 998;
   padding-right: 2em;
 }
@@ -12,7 +12,7 @@
 .sidebar {
   position: fixed;
   top: 0;
-  left: -350px;
+  left: -250px;
   min-height: 100%;
   min-width: 300px;
   background-color: var(--sidebar-bg);

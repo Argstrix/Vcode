@@ -5,7 +5,7 @@ interface UserContextType {
     role: "teacher" | "student" | null;
     port: string | null;
     hostIP: string;
-    userName: string; // Changed to always be a string
+    userName: string;
 }
 
 const UserContext = createContext<UserContextType>({
@@ -13,6 +13,7 @@ const UserContext = createContext<UserContextType>({
     role: null,
     port: null,
     hostIP: "192.168.67.185",
+    userName: "", // Fixed the syntax and provided a default string
 });
 
 export const useUser = () => useContext(UserContext);
@@ -21,7 +22,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     const [email, setEmail] = useState<string | null>(null);
     const [role, setRole] = useState<"teacher" | "student" | null>(null);
     const [port, setPort] = useState<string | null>(null);
-    const hostIP = "192.168.67.185"; // Server IP
+    const [userName, setUserName] = useState<string>(""); // Added state for userName
+    const hostIP = "192.168.67.185";
 
     useEffect(() => {
         const storedEmail = localStorage.getItem("userEmail");
@@ -32,7 +34,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setEmail(storedEmail);
         setRole(storedRole);
         setPort(storedPort);
-        setUserName(storedName || ""); // Default to empty string if null
+        setUserName(storedName || "");
     }, []);
 
     return (

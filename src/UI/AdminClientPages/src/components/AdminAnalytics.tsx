@@ -4,9 +4,9 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   PieChart, Pie, Cell, Legend,
 } from 'recharts';
+import TopUsersTable from './TopUsersTable';
 
 const AdminAnalytics: React.FC = () => {
-  // Dummy data
   const topUsers = [
     { username: 'devDude42', submissions: 89 },
     { username: 'codeQueen', submissions: 75 },
@@ -38,26 +38,8 @@ const AdminAnalytics: React.FC = () => {
     <div className="admin-analytics-container">
       <h1 className="admin-title">🛠️ Admin User Analytics</h1>
 
-      {/* Top Users */}
-      <section className="admin-section">
-        <h2>👑 Top 5 Active Users</h2>
-        <table className="admin-table">
-          <thead>
-            <tr>
-              <th>User</th>
-              <th>Submissions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {topUsers.map((user, i) => (
-              <tr key={i}>
-                <td>{user.username}</td>
-                <td>{user.submissions}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </section>
+      {/* Top Users Section as a Separate Component */}
+      <TopUsersTable users={topUsers} />
 
       {/* Submission Trends */}
       <section className="admin-section">
@@ -86,7 +68,7 @@ const AdminAnalytics: React.FC = () => {
               dataKey="value"
               label
             >
-              {languageUsage.map((_,index) => (
+              {languageUsage.map((_, index) => (
                 <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
               ))}
             </Pie>
