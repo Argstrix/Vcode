@@ -22,7 +22,7 @@ public class Server {
 
     public static void main(String[] args) throws IOException {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : 8080;
-        ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getByAddress(new byte[] {0,0,0,0}));
+        ServerSocket serverSocket = new ServerSocket(port, 50, InetAddress.getByAddress(new byte[] { 0, 0, 0, 0 }));
 
         System.out.println("Server running on port " + port);
 
@@ -117,20 +117,31 @@ class ClientHandler implements Runnable {
                     sendJsonResponse(out, 200, submissions);
 
                 } else if (method.equals("POST") && path.equals("/submitCode")) {
+                    // Parse the incoming request body (JSON)
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
                     String code = jsonObject.get("code").getAsString();
                     String problemId = jsonObject.get("problemId").getAsString();
                     String language = jsonObject.get("language").getAsString().toLowerCase();
+                    String timeTaken = jsonObject.get("timeTaken").getAsString(); // Assuming timeTaken is sent from the
+                                                                                  // frontend
+                    String userId = jsonObject.get("userId").getAsString(); // Assuming userId is sent from the frontend
 
+                    // Get current timestamp and client IP address
                     String timestamp = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").format(new Date());
-                    String clientIP = clientSocket.getInetAddress().getHostAddress();
+                    String clientIP = clientSocket.getInetAddress().getHostAddress(); // Assuming clientSocket is
+                                                                                      // accessible
 
-                    // Save the submission
+                    // Prepare submission details
                     Map<String, String> submission = new HashMap<>();
-                    submission.put("code", code);
-                    submission.put("timestamp", timestamp);
-                    submission.put("ip", clientIP);
-                    submission.put("language", language);
+                    submission.put("userId", userId); // User ID from the frontend
+                    submission.put("problemId", problemId); // Problem ID from the frontend
+                    submission.put("code", code); // Code submitted by the user
+                    submission.put("language", language); // Language of the submitted code
+                    submission.put("timeTaken", timeTaken); // Time taken to solve the problem (from frontend)
+                    submission.put("timestamp", timestamp); // Timestamp of the submission
+                    submission.put("ip", clientIP); // IP address of the client making the request
+
+                    // Push the submission data to Firebase
                     pushSubmissionToFirebase(submission);
 
                     try {
@@ -151,9 +162,9 @@ class ClientHandler implements Runnable {
                                 handlePythonSubmissionAndCheck(code, problemId, out);
                             }
 
-                            case "c" ->{
+                            case "c" -> {
                                 String filePath = "main.c";
-                                try(FileWriter writer = new FileWriter(filePath)){
+                                try (FileWriter writer = new FileWriter(filePath)) {
                                     writer.write(code);
                                 }
                                 handleCFilesSubmitAndCheck(code, problemId, out);
@@ -161,7 +172,7 @@ class ClientHandler implements Runnable {
 
                             case "cpp" -> {
                                 String filePath = "main.cpp";
-                                try(FileWriter writer = new FileWriter(filePath)){
+                                try (FileWriter writer = new FileWriter(filePath)) {
                                     writer.write(code);
                                 }
                                 handleCppFileSubmitAndCheck(code, problemId, out);
@@ -182,7 +193,8 @@ class ClientHandler implements Runnable {
                         deleteSingleQuestionFromFirebase(id); // Call your deletion method
                         sendJsonResponse(out, 200, Map.of("message", "Submission deleted successfully"));
                     } else {
-                        sendJsonResponse(out, 400, Map.of("error", "Invalid path format. Expected /clearSingleSubmissions/{id}"));
+                        sendJsonResponse(out, 400,
+                                Map.of("error", "Invalid path format. Expected /clearSingleSubmissions/{id}"));
                     }
                 } else if (method.equals("DELETE") && path.equals("/clearSubmissions")) {
                     clearSubmissionsOnFirebase();
@@ -209,35 +221,34 @@ class ClientHandler implements Runnable {
                     }
                 } else if (method.equals("PUT") && path.startsWith("/updateQuestion")) {
                     System.out.println("Received /updateQuestion request with body: " + requestBody);
-                        JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
+                    JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
 
-                        Map<String, Object> question = new HashMap<>();
-                        question.put("id", jsonObject.get("id").getAsString());
-                        question.put("title", jsonObject.get("title").getAsString());
-                        question.put("diff", jsonObject.get("diff").getAsString());
-                        question.put("desc", jsonObject.get("desc").getAsString());
-                        question.put("code", jsonObject.get("code").getAsString());
-                        question.put("desc", jsonObject.get("desc").getAsString());
-                        question.put("cases", jsonObject.get("cases").getAsString());
+                    Map<String, Object> question = new HashMap<>();
+                    question.put("id", jsonObject.get("id").getAsString());
+                    question.put("title", jsonObject.get("title").getAsString());
+                    question.put("diff", jsonObject.get("diff").getAsString());
+                    question.put("desc", jsonObject.get("desc").getAsString());
+                    question.put("code", jsonObject.get("code").getAsString());
+                    question.put("desc", jsonObject.get("desc").getAsString());
+                    question.put("cases", jsonObject.get("cases").getAsString());
 
-                        List<String> tags = new ArrayList<>();
-                        JsonArray tagsArray = jsonObject.get("tags").getAsJsonArray();
-                        for (JsonElement element : tagsArray) {
-                            tags.add(element.getAsString());
-                        }
-                        question.put("tags", tags);
+                    List<String> tags = new ArrayList<>();
+                    JsonArray tagsArray = jsonObject.get("tags").getAsJsonArray();
+                    for (JsonElement element : tagsArray) {
+                        tags.add(element.getAsString());
+                    }
+                    question.put("tags", tags);
 
-                        System.out.println("Parsed question: " + question);
+                    System.out.println("Parsed question: " + question);
 
-                        boolean success = updateQuestionToFirebase(question);
-                        if (success) {
-                            sendJsonResponse(out, 200, Map.of("message", "Question added successfully"));
-                        } else {
-                            System.err.println("Failed to add question in addQuestionToFirebase()");
-                            sendJsonResponse(out, 500, Map.of("error", "Failed to add question"));
-                        }
-                        
-                    
+                    boolean success = updateQuestionToFirebase(question);
+                    if (success) {
+                        sendJsonResponse(out, 200, Map.of("message", "Question added successfully"));
+                    } else {
+                        System.err.println("Failed to add question in addQuestionToFirebase()");
+                        sendJsonResponse(out, 500, Map.of("error", "Failed to add question"));
+                    }
+
                 } else if (method.equals("POST") && path.equals("/compile")) {
                     JsonObject jsonObject = JsonParser.parseString(requestBody).getAsJsonObject();
                     String code = jsonObject.get("code").getAsString();
@@ -270,7 +281,7 @@ class ClientHandler implements Runnable {
 
                             case "c" -> {
                                 String CFile = "main.c";
-                                try(FileWriter writer = new FileWriter(CFile)){
+                                try (FileWriter writer = new FileWriter(CFile)) {
                                     writer.write(code);
                                 }
                                 output = CCompilerRunner.run(CFile, testInput);
@@ -278,7 +289,7 @@ class ClientHandler implements Runnable {
 
                             case "cpp" -> {
                                 String CppFile = "main.cpp";
-                                try(FileWriter writer = new FileWriter(CppFile)){
+                                try (FileWriter writer = new FileWriter(CppFile)) {
                                     writer.write(code);
                                 }
                                 output = CppCompilerRunner.run(CppFile, testInput);
@@ -410,6 +421,7 @@ class ClientHandler implements Runnable {
         }
         return questions;
     }
+
     public boolean updateQuestionToFirebase(Map<String, Object> questionData) {
         try {
             // Extract the ID from the map (make sure it's there!)
@@ -423,7 +435,8 @@ class ClientHandler implements Runnable {
             String id = String.valueOf(idObj);
 
             // Firebase URL to update specific question by ID
-            URL putUrl = new URL("https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions/" + id + ".json");
+            URL putUrl = new URL(
+                    "https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions/" + id + ".json");
             HttpURLConnection putConn = (HttpURLConnection) putUrl.openConnection();
             putConn.setRequestMethod("PUT");
             putConn.setRequestProperty("Content-Type", "application/json; utf-8");
@@ -452,6 +465,7 @@ class ClientHandler implements Runnable {
 
         return false;
     }
+
     public boolean addQuestionToFirebase(Map<String, Object> questionData) {
         try {
             // Step 1: Send POST request to add the question
@@ -460,12 +474,12 @@ class ClientHandler implements Runnable {
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json; utf-8");
             conn.setDoOutput(true);
-    
+
             String jsonInput = new Gson().toJson(questionData);
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(jsonInput.getBytes("utf-8"));
             }
-    
+
             int responseCode = conn.getResponseCode();
             if (responseCode == HttpURLConnection.HTTP_OK || responseCode == HttpURLConnection.HTTP_CREATED) {
                 // Step 2: Parse response to get generated Firebase key
@@ -475,27 +489,29 @@ class ClientHandler implements Runnable {
                     while ((responseLine = br.readLine()) != null) {
                         response.append(responseLine.trim());
                     }
-    
+
                     String responseJson = response.toString();
                     String generatedKey = new Gson().fromJson(responseJson, JsonObject.class).get("name").getAsString();
-    
+
                     System.out.println("Question added with key: " + generatedKey);
-    
+
                     // Step 3: Update questionData with the actual generated ID
                     questionData.put("id", generatedKey); // Replaces dummy or old ID
-    
+
                     // Step 4: Send PUT request to update the same entry with the correct ID
-                    URL putUrl = new URL("https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions/" + generatedKey + ".json");
+                    URL putUrl = new URL(
+                            "https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions/"
+                                    + generatedKey + ".json");
                     HttpURLConnection putConn = (HttpURLConnection) putUrl.openConnection();
                     putConn.setRequestMethod("PUT");
                     putConn.setRequestProperty("Content-Type", "application/json; utf-8");
                     putConn.setDoOutput(true);
-    
+
                     String updatedJson = new Gson().toJson(questionData);
                     try (OutputStream os = putConn.getOutputStream()) {
                         os.write(updatedJson.getBytes("utf-8"));
                     }
-    
+
                     int putResponseCode = putConn.getResponseCode();
                     if (putResponseCode == HttpURLConnection.HTTP_OK) {
                         System.out.println("ID field updated in Firebase.");
@@ -510,10 +526,9 @@ class ClientHandler implements Runnable {
         } catch (IOException e) {
             e.printStackTrace();
         }
-    
+
         return false;
     }
-    
 
     private void pushSubmissionToFirebase(Map<String, String> submission) {
         try {
@@ -557,26 +572,27 @@ class ClientHandler implements Runnable {
     private void deleteSingleQuestionFromFirebase(String firebaseKey) {
         try {
             URL url = new URL(
-                "https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions/" 
-                + firebaseKey + ".json");
-    
+                    "https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions/"
+                            + firebaseKey + ".json");
+
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            System.out.println("Hitting URL: https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions/" + firebaseKey + ".json");
+            System.out.println(
+                    "Hitting URL: https://vcode-3b099-default-rtdb.asia-southeast1.firebasedatabase.app/questions/"
+                            + firebaseKey + ".json");
 
             conn.setRequestMethod("DELETE");
             int responseCode = conn.getResponseCode();
-    
+
             if (responseCode == 200) {
                 System.out.println("Question deleted successfully!");
             } else {
                 System.err.println("Failed to delete question. Response code: " + responseCode);
             }
-    
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    
 
     private void clearSubmissionsOnFirebase() {
         try {
@@ -854,125 +870,124 @@ class ClientHandler implements Runnable {
     }
 
     private void handleCFilesSubmitAndCheck(String code, String problemId, BufferedWriter out) {
-    final String SOURCE_FILE = "main.c";
+        final String SOURCE_FILE = "main.c";
 
-    Map<String, Object> question = getQuestionByIdFromFirebase(problemId);
-    if (question == null || !question.containsKey("cases") || !question.containsKey("code")) {
+        Map<String, Object> question = getQuestionByIdFromFirebase(problemId);
+        if (question == null || !question.containsKey("cases") || !question.containsKey("code")) {
+            try {
+                sendJsonResponse(out, 404, Map.of("message", "Problem not found or incomplete."));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            return;
+        }
+
+        List<String> testCases = (List<String>) question.get("cases");
+        System.out.println(testCases);
+        String expectedCode = question.get("code").toString();
+
+        int passed = 0;
+        StringBuilder resultBuilder = new StringBuilder();
+
+        for (int i = 0; i < testCases.size(); i++) {
+            String input = testCases.get(i);
+            String testCaseNumber = String.valueOf(i + 1); // for display
+
+            try {
+                // Step 1: Run expected code
+                writeToFile("Main.java", expectedCode);
+                String expectedOutput = JavaFileCompiler.compileAndRun("Main.java", input).trim();
+
+                // Step 2: Run submitted code
+                writeToFile(SOURCE_FILE, code);
+                String actualOutput = CCompilerRunner.run(SOURCE_FILE, input).trim();
+
+                // Step 3: Compare outputs
+                if (expectedOutput.equals(actualOutput)) {
+                    passed++;
+                    resultBuilder.append("Test ").append(testCaseNumber).append(": Success\n");
+                } else {
+                    resultBuilder.append("Test ").append(testCaseNumber)
+                            .append(": Failed (Expected: ")
+                            .append(expectedOutput).append(", Got: ")
+                            .append(actualOutput).append(")\n");
+                }
+            } catch (Exception e) {
+                resultBuilder.append("Test ").append(testCaseNumber)
+                        .append(": Error executing code - ")
+                        .append(e.getMessage()).append("\n");
+            }
+        }
+
+        String summary = "Passed " + passed + "/" + testCases.size() + " test cases.\n\n";
+        resultBuilder.insert(0, summary);
+
         try {
-            sendJsonResponse(out, 404, Map.of("message", "Problem not found or incomplete."));
+            sendJsonResponse(out, 200, Map.of("result", resultBuilder.toString()));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return;
     }
 
-    List<String> testCases = (List<String>) question.get("cases");
-    System.out.println(testCases);
-    String expectedCode = question.get("code").toString();
+    private void handleCppFileSubmitAndCheck(String code, String problemId, BufferedWriter out) {
+        final String SOURCE_FILE = "main.cpp";
 
-    int passed = 0;
-    StringBuilder resultBuilder = new StringBuilder();
-
-    for (int i = 0; i < testCases.size(); i++) {
-        String input = testCases.get(i);
-        String testCaseNumber = String.valueOf(i + 1); // for display
-
-        try {
-            // Step 1: Run expected code
-            writeToFile("Main.java", expectedCode);
-            String expectedOutput = JavaFileCompiler.compileAndRun("Main.java", input).trim();
-
-            // Step 2: Run submitted code
-            writeToFile(SOURCE_FILE, code);
-            String actualOutput = CCompilerRunner.run(SOURCE_FILE, input).trim();
-
-            // Step 3: Compare outputs
-            if (expectedOutput.equals(actualOutput)) {
-                passed++;
-                resultBuilder.append("Test ").append(testCaseNumber).append(": Success\n");
-            } else {
-                resultBuilder.append("Test ").append(testCaseNumber)
-                        .append(": Failed (Expected: ")
-                        .append(expectedOutput).append(", Got: ")
-                        .append(actualOutput).append(")\n");
+        Map<String, Object> question = getQuestionByIdFromFirebase(problemId);
+        if (question == null || !question.containsKey("cases") || !question.containsKey("code")) {
+            try {
+                sendJsonResponse(out, 404, Map.of("message", "Problem not found or incomplete."));
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-        } catch (Exception e) {
-            resultBuilder.append("Test ").append(testCaseNumber)
-                    .append(": Error executing code - ")
-                    .append(e.getMessage()).append("\n");
+            return;
         }
-    }
 
-    String summary = "Passed " + passed + "/" + testCases.size() + " test cases.\n\n";
-    resultBuilder.insert(0, summary);
+        List<String> testCases = (List<String>) question.get("cases");
+        System.out.println(testCases);
+        String expectedCode = question.get("code").toString();
 
-    try {
-        sendJsonResponse(out, 200, Map.of("result", resultBuilder.toString()));
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
-}
+        int passed = 0;
+        StringBuilder resultBuilder = new StringBuilder();
 
-private void handleCppFileSubmitAndCheck(String code, String problemId, BufferedWriter out) {
-    final String SOURCE_FILE = "main.cpp";
+        for (int i = 0; i < testCases.size(); i++) {
+            String input = testCases.get(i);
+            String testCaseNumber = String.valueOf(i + 1); // for display
 
-    Map<String, Object> question = getQuestionByIdFromFirebase(problemId);
-    if (question == null || !question.containsKey("cases") || !question.containsKey("code")) {
+            try {
+                // Step 1: Run expected code (in Java, assuming expectedCode is in Java)
+                writeToFile("Main.java", expectedCode);
+                String expectedOutput = JavaFileCompiler.compileAndRun("Main.java", input).trim();
+
+                // Step 2: Run submitted C++ code
+                writeToFile(SOURCE_FILE, code);
+                String actualOutput = CppCompilerRunner.run(SOURCE_FILE, input).trim();
+
+                // Step 3: Compare outputs
+                if (expectedOutput.equals(actualOutput)) {
+                    passed++;
+                    resultBuilder.append("Test ").append(testCaseNumber).append(": Success\n");
+                } else {
+                    resultBuilder.append("Test ").append(testCaseNumber)
+                            .append(": Failed (Expected: ")
+                            .append(expectedOutput).append(", Got: ")
+                            .append(actualOutput).append(")\n");
+                }
+            } catch (Exception e) {
+                resultBuilder.append("Test ").append(testCaseNumber)
+                        .append(": Error executing code - ")
+                        .append(e.getMessage()).append("\n");
+            }
+        }
+
+        String summary = "Passed " + passed + "/" + testCases.size() + " test cases.\n\n";
+        resultBuilder.insert(0, summary);
+
         try {
-            sendJsonResponse(out, 404, Map.of("message", "Problem not found or incomplete."));
+            sendJsonResponse(out, 200, Map.of("result", resultBuilder.toString()));
         } catch (IOException e) {
             e.printStackTrace();
         }
-        return;
     }
-
-    List<String> testCases = (List<String>) question.get("cases");
-    System.out.println(testCases);
-    String expectedCode = question.get("code").toString();
-
-    int passed = 0;
-    StringBuilder resultBuilder = new StringBuilder();
-
-    for (int i = 0; i < testCases.size(); i++) {
-        String input = testCases.get(i);
-        String testCaseNumber = String.valueOf(i + 1); // for display
-
-        try {
-            // Step 1: Run expected code (in Java, assuming expectedCode is in Java)
-            writeToFile("Main.java", expectedCode);
-            String expectedOutput = JavaFileCompiler.compileAndRun("Main.java", input).trim();
-
-            // Step 2: Run submitted C++ code
-            writeToFile(SOURCE_FILE, code);
-            String actualOutput = CppCompilerRunner.run(SOURCE_FILE, input).trim();
-
-            // Step 3: Compare outputs
-            if (expectedOutput.equals(actualOutput)) {
-                passed++;
-                resultBuilder.append("Test ").append(testCaseNumber).append(": Success\n");
-            } else {
-                resultBuilder.append("Test ").append(testCaseNumber)
-                        .append(": Failed (Expected: ")
-                        .append(expectedOutput).append(", Got: ")
-                        .append(actualOutput).append(")\n");
-            }
-        } catch (Exception e) {
-            resultBuilder.append("Test ").append(testCaseNumber)
-                    .append(": Error executing code - ")
-                    .append(e.getMessage()).append("\n");
-        }
-    }
-
-    String summary = "Passed " + passed + "/" + testCases.size() + " test cases.\n\n";
-    resultBuilder.insert(0, summary);
-
-    try {
-        sendJsonResponse(out, 200, Map.of("result", resultBuilder.toString()));
-    } catch (IOException e) {
-        e.printStackTrace();
-    }
-}
-
 
     private void writeToFile(String filename, String content) throws IOException {
         try (FileWriter writer = new FileWriter(filename)) {

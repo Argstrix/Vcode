@@ -25,7 +25,7 @@ function App() {
     return (
         <Router>
             <Routes>
-                {true ? (
+                {isAdmin() ? (
                     <Route path="/" element={<AdminLayout />}>
                         <Route index element={<Dashboard />} />
                         <Route path="problems" element={<ProblemList />} />
@@ -50,7 +50,23 @@ function App() {
                         <Route index element={<ClientDashBoard />} />
                         <Route
                             path="cproblems"
-                            element={<ClientProblemList />}
+                            element={
+                                <div
+                                    style={{
+                                        margin: "0 auto",
+                                        marginTop: "2rem",
+                                        maxWidth: "80%",
+                                        background: "var(--card-bg)",
+                                        color: "var(--text-color)",
+                                        padding: "2rem",
+                                        borderRadius: "1rem",
+                                        boxShadow:
+                                            "0 4px 16px rgba(0, 0, 0, 0.3)",
+                                    }}
+                                >
+                                    <ClientProblemList />
+                                </div>
+                            }
                         />
                         <Route
                             path="csubmissions"

@@ -5,7 +5,7 @@ import "../styles/ProblemList.css";
 import { useUser } from "../context/UserContext";
 
 const ClientProblemList = () => {
-    const {port,hostIP} = useUser();
+    const { port, hostIP } = useUser();
     const [problems, setProblems] = useState([
         { id: 1, title: "Two Sum", diff: "Easy", tags: ["Array", "HashMap"] },
         {
@@ -26,10 +26,13 @@ const ClientProblemList = () => {
     useEffect(() => {
         const fetchProblems = async () => {
             try {
-                const response = await fetch(`http://${hostIP}:${port}/question`, {
-                    method: "GET",
-                    headers: { "Content-Type": "application/json" },
-                });
+                const response = await fetch(
+                    `http://${hostIP}:${port}/question`,
+                    {
+                        method: "GET",
+                        headers: { "Content-Type": "application/json" },
+                    }
+                );
 
                 if (!response.ok) {
                     throw new Error(`HTTP error! Status: ${response.status}`);
@@ -50,7 +53,6 @@ const ClientProblemList = () => {
     return (
         <div className="overflow-auto">
             <h2 className="problemList-title">Problem List</h2>
-
             <ul className="list-group">
                 {problems.map((problem) => (
                     <li key={problem.id}>
@@ -59,7 +61,9 @@ const ClientProblemList = () => {
                             {problem.diff}
                             <br />
                             {problem.tags?.map((tag, index) => (
-                                <span key={index} className="tag">{tag}</span>
+                                <span key={index} className="tag">
+                                    {tag}
+                                </span>
                             ))}
                         </Link>
                     </li>

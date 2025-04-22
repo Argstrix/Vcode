@@ -86,7 +86,7 @@ const AdminAnalytics: React.FC = () => {
               dataKey="value"
               label
             >
-              {languageUsage.map((entry, index) => (
+              {languageUsage.map((_,index) => (
                 <Cell key={`cell-${index}`} fill={pieColors[index % pieColors.length]} />
               ))}
             </Pie>
