@@ -30,27 +30,23 @@ const GitHubHeatmap: React.FC<GitHubHeatmapProps> = ({
 
     useEffect(() => {
         const processData = () => {
-            // Create a date range
             const start = new Date(startDate);
             const end = new Date(endDate);
 
-            // Ensure start date is a Sunday to align grid properly
             const dayOfWeek = start.getDay();
             start.setDate(start.getDate() - dayOfWeek);
 
-            // Create activity lookup map
             const activityMap: Record<string, number> = {};
             activityData.forEach((item) => {
                 activityMap[item.date] = item.count;
             });
 
-            // Find max count for color scaling
             const maxCount = Math.max(
                 ...activityData.map((item) => item.count),
-                1 // Ensure we have at least 1 to avoid division by zero
+                1 
             );
 
-            // Generate cells
+            
             const cells: {
                 date: string;
                 count: number;

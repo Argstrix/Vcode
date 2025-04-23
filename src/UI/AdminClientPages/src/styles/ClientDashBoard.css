@@ -65,7 +65,6 @@ html {
 
 /* Light Mode Adjustments */
 .light-theme .dashboard-card {
-    background-color: #d4d4d4; /* Darker gray */
     box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -138,10 +137,10 @@ html {
     border-radius: 8px;
     max-width: max-content;
     padding: 15px;
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow, 0px 4px 10px rgba(0, 0, 0, 0.08));
 }
 
-/* Override react-calendar internal styles */
+/* Main calendar container */
 .calendar-widget .react-calendar {
     background-color: var(--content-bg);
     color: var(--text-color);
@@ -150,22 +149,79 @@ html {
     padding: 10px;
     width: fit-content;
     height: fit-content;
+    box-shadow: none;
 }
 
-/* Optional: style each tile (day cell) */
-/* .calendar-widget .react-calendar__tile {
+/* Calendar navigation (month/year selectors) */
+.calendar-widget .react-calendar__navigation {
+    background: transparent;
     color: var(--text-color);
-    background-color: transparent;
-} */
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
 
-/* .calendar-widget .react-calendar__tile:hover {
-    background-color: rgb(255, 0, 0);
-} */
+.calendar-widget .react-calendar__navigation button {
+    color: var(--text-color);
+    background: transparent;
+    border: none;
+    font-weight: 500;
+    border-radius: 4px;
+    transition: background 0.15s;
+}
 
+.calendar-widget .react-calendar__navigation button:enabled:hover,
+.calendar-widget .react-calendar__navigation button:focus {
+    background: var(--hoverbgcolor);
+    color: var(--accent-color, var(--togglehovercolor));
+}
+
+/* Weekday labels */
+.calendar-widget .react-calendar__month-view__weekdays {
+    color: var(--accent-color, var(--togglehovercolor));
+    font-weight: 600;
+    background: transparent;
+    border-radius: 4px;
+}
+
+/* Day tiles */
+.calendar-widget .react-calendar__tile {
+    color: var(--text-color);
+    background: transparent;
+    border-radius: 4px;
+    transition: background 0.15s, color 0.15s;
+}
+
+.calendar-widget .react-calendar__tile:enabled:hover,
+.calendar-widget .react-calendar__tile:focus {
+    background: var(--hoverbgcolor);
+    color: var(--accent-color, var(--togglehovercolor));
+}
+
+/* Selected day */
 .calendar-widget .react-calendar__tile--active {
-    background-color: var(--card-bg);
-    color: var(--content-bg);
+    background: var(--accent-color, var(--togglehovercolor));
+    color: #fff;
     border-radius: 6px;
     font-weight: bold;
-    transition: background-color 0.2s ease-in-out;
+    transition: background 0.2s, color 0.2s;
+}
+
+/* Range selection (if enabled) */
+.calendar-widget .react-calendar__tile--range {
+    background: var(--togglehovercolor);
+    color: #fff;
+    border-radius: 6px;
+}
+
+.calendar-widget .react-calendar__tile--rangeStart,
+.calendar-widget .react-calendar__tile--rangeEnd {
+    background: var(--accent-color, var(--togglehovercolor));
+    color: #fff;
+    border-radius: 6px;
+}
+
+/* Remove focus ring for mouse users, keep for keyboard users */
+.calendar-widget .react-calendar__tile:focus {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--accent-color, var(--togglehovercolor));
 }

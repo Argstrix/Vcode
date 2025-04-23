@@ -19,7 +19,7 @@
     justify-content: space-between;
     flex-wrap: wrap;
     align-items: center;
-    background-color: var(--sidebar-bg);
+    background-color: var(--content-bg);
     color: var(--text-color);
     border: 1px solid white;
     padding: 0.6em;

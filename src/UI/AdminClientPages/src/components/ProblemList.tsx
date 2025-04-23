@@ -109,7 +109,7 @@ const ProblemList = () => {
                     {problems.map((problem) => (
                         <li key={problem.id}>
                             <Link
-                                to={"/question/" + problem.id}
+                                to={"/editProblem/" + problem.id}
                                 className="pli"
                             >
                                 <div className="problem-content">

@@ -45,7 +45,7 @@ function App() {
                         />
                         <Route path="add-problem" element={<AddProblem />} />
                     </Route>
-                ) : isStudent() ? (
+                ) : isStudent()? (
                     <Route path="/" element={<ClientLayout />}>
                         <Route index element={<ClientDashBoard />} />
                         <Route

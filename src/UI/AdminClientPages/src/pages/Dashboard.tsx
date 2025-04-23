@@ -1,8 +1,6 @@
 import "../styles/Dashboard.css";
-
 import SubmissionList from "../components/SubmissionList";
 import "../../../node_modules/bootstrap/dist/css/bootstrap.css"
-
 import CalendarWidget from "../components/CalendarWidget";
 import DigitalClock from "../components/DigitalClock";
 import TopUsersTable from "../components/TopUsersTable";
@@ -25,7 +23,7 @@ function Dashboard() {
               Dashboard
           </h1>
           <div className="dashboard-cards">
-              <div className="dashboard-card">Total Users: 120</div>
+              <div className="dashboard-card  ">Total Users: 120</div>
               <div className="dashboard-card">Problems Created: 30</div>
               <div className="dashboard-card">Submissions Today: 150</div>
           </div>
